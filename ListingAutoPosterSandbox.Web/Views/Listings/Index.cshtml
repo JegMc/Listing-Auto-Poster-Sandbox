@@ -1,0 +1,36 @@
+@model List<ListingAutoPosterSandbox.Web.Models.Listing>
+
+@{
+    ViewData["Title"] = "Listings";
+}
+
+<h1>Listings</h1>
+
+<p>Select a listing to eventually generate and schedule a social media post.</p>
+
+<div class="row">
+    @foreach (var listing in Model)
+    {
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <img src="@listing.ImageUrl" class="card-img-top" alt="@listing.Title" />
+
+                <div class="card-body">
+                    <h5 class="card-title">@listing.Title</h5>
+                    <p class="card-text">@listing.Address</p>
+                    <p class="card-text">
+                        <strong>@listing.Price.ToString("C0")</strong>
+                    </p>
+                    <p class="card-text">@listing.Description</p>
+
+                    <a class="btn btn-primary"
+                        asp-controller="Listings"
+                        asp-action="GenerateCaption"
+                        asp-route-id="@listing.Id">
+                        Generate Caption
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+</div>

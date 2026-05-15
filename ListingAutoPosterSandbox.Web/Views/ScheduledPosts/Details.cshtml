@@ -1,0 +1,142 @@
+@using ListingAutoPosterSandbox.Web.Models
+@model ListingAutoPosterSandbox.Web.Models.ScheduledPost
+
+@{
+    ViewData["Title"] = "Scheduled Post Details";
+
+    var attempts = ViewBag.Attempts as List<PostAttempt> ?? new List<PostAttempt>();
+    var easternTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+
+    var scheduledEastern = TimeZoneInfo.ConvertTimeFromUtc(Model.ScheduledUtc, easternTimeZone);
+    var createdEastern = TimeZoneInfo.ConvertTimeFromUtc(Model.CreatedUtc, easternTimeZone);
+    var updatedEastern = TimeZoneInfo.ConvertTimeFromUtc(Model.UpdatedUtc, easternTimeZone);
+}
+
+<h1>Scheduled Post Details</h1>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <strong>@Model.Listing.Title</strong>
+    </div>
+
+    <div class="card-body">
+        <p><strong>Platform:</strong> @Model.Platform</p>
+        <p><strong>Social Account:</strong>
+            @if (Model.SocialAccount is not null)
+            {
+                <span>@Model.SocialAccount.DisplayName</span>
+                <br />
+                <small class="text-muted">
+                    Secret reference: @Model.SocialAccount.SecretName
+                </small>
+            }
+            else
+            {
+                <span class="text-muted">None</span>
+            }
+        </p>
+        <p><strong>Status:</strong> @Model.Status</p>
+        <p><strong>Scheduled Time:</strong> @scheduledEastern.ToString("yyyy-MM-dd h:mm tt") Eastern</p>
+        <p><strong>Created:</strong> @createdEastern.ToString("yyyy-MM-dd h:mm tt") Eastern</p>
+        <p><strong>Updated:</strong> @updatedEastern.ToString("yyyy-MM-dd h:mm tt") Eastern</p>
+        <p><strong>Attempt Count:</strong> @Model.AttemptCount</p>
+
+        <p>
+            <strong>External Post ID:</strong>
+            @if (!string.IsNullOrWhiteSpace(Model.ExternalPostId))
+            {
+                <span>@Model.ExternalPostId</span>
+            }
+            else
+            {
+                <span class="text-muted">None</span>
+            }
+        </p>
+
+        @if (!string.IsNullOrWhiteSpace(Model.LastError))
+        {
+            <div class="alert alert-danger">
+                <strong>Last Error:</strong> @Model.LastError
+            </div>
+        }
+
+        <hr />
+
+        <h5>Caption</h5>
+        <p style="white-space: pre-wrap;">@Model.Caption</p>
+    </div>
+</div>
+
+<h2>Publish Attempts</h2>
+
+@if (!attempts.Any())
+{
+    <div class="alert alert-info">
+        No publish attempts have been recorded yet.
+    </div>
+}
+else
+{
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Started</th>
+                <th>Completed</th>
+                <th>Success</th>
+                <th>Error</th>
+                <th>Response JSON</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var attempt in attempts)
+            {
+                var startedEastern = TimeZoneInfo.ConvertTimeFromUtc(attempt.StartedUtc, easternTimeZone);
+                DateTime? completedEastern = attempt.CompletedUtc.HasValue
+                    ? TimeZoneInfo.ConvertTimeFromUtc(attempt.CompletedUtc.Value, easternTimeZone)
+                    : null;
+
+                <tr>
+                    <td>@startedEastern.ToString("yyyy-MM-dd h:mm:ss tt") Eastern</td>
+                    <td>
+                        @if (completedEastern.HasValue)
+                        {
+                            @completedEastern.Value.ToString("yyyy-MM-dd h:mm:ss tt")
+                            <span> Eastern</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Not completed</span>
+                        }
+                    </td>
+                    <td>@attempt.Success</td>
+                    <td>
+                        @if (!string.IsNullOrWhiteSpace(attempt.ErrorMessage))
+                        {
+                            <span class="text-danger">@attempt.ErrorMessage</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">None</span>
+                        }
+                    </td>
+                    <td style="max-width: 500px;">
+                        @if (!string.IsNullOrWhiteSpace(attempt.ResponseJson))
+                        {
+                            <pre class="mb-0" style="white-space: pre-wrap;">@attempt.ResponseJson</pre>
+                        }
+                        else
+                        {
+                            <span class="text-muted">None</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<a class="btn btn-secondary"
+   asp-controller="ScheduledPosts"
+   asp-action="Index">
+    Back to Scheduled Posts
+</a>

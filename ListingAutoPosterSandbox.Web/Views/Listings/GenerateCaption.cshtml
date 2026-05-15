@@ -1,0 +1,63 @@
+@using ListingAutoPosterSandbox.Web.Models
+@model ListingAutoPosterSandbox.Web.Models.GeneratedCaptionViewModel
+
+@{
+    ViewData["Title"] = "Generated Caption";
+
+    var defaultScheduleTime = DateTime.Now.AddHours(1).ToString("yyyy-MM-ddTHH:mm");
+}
+
+<h1>Generated Caption</h1>
+
+<div class="mb-4">
+    <h4>@Model.Listing.Title</h4>
+    <p>@Model.Listing.Address</p>
+    <p><strong>@Model.Listing.Price.ToString("C0")</strong></p>
+    <p>@Model.Listing.Description</p>
+</div>
+
+<form asp-controller="ScheduledPosts" asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+
+    <input type="hidden" name="ListingId" value="@Model.Listing.Id" />
+
+    <div class="mb-3">
+        <label for="Caption" class="form-label">Caption</label>
+        <textarea id="Caption" name="Caption" class="form-control" rows="8">@Model.Caption</textarea>
+    </div>
+
+    <div class="mb-3">
+        <label for="SocialAccountId" class="form-label">Social Account</label>
+        <select id="SocialAccountId" name="SocialAccountId" class="form-select">
+            @foreach (var account in Model.SocialAccounts)
+            {
+                <option value="@account.Id">
+                    @account.Platform - @account.DisplayName
+                </option>
+            }
+        </select>
+
+        <div class="form-text">
+            The selected account determines which platform will be used.
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="ScheduledLocal" class="form-label">Schedule Time</label>
+        <input id="ScheduledLocal"
+               name="ScheduledLocal"
+               type="datetime-local"
+               class="form-control"
+               value="@defaultScheduleTime" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        Schedule Post
+    </button>
+
+    <a class="btn btn-secondary"
+       asp-controller="Listings"
+       asp-action="Index">
+        Back to Listings
+    </a>
+</form>

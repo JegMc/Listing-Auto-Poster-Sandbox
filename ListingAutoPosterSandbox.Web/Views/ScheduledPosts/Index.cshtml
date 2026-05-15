@@ -1,0 +1,124 @@
+@model List<ListingAutoPosterSandbox.Web.Models.ScheduledPost>
+
+@{
+    ViewData["Title"] = "Scheduled Posts";
+
+    var easternTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+}
+
+<h1>Scheduled Posts</h1>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No scheduled posts yet.
+    </div>
+}
+else
+{
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Listing</th>
+                <th>Platform</th>
+                <th>Social Account</th>
+                <th>Status</th>
+                <th>Scheduled Time</th>
+                <th>Attempts</th>
+                <th>External Post ID</th>
+                <th>Caption</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var post in Model)
+            {
+                <tr>
+                    <td>@post.Listing.Title</td>
+                    <td>@post.Platform</td>
+                    <td>
+                        @if (post.SocialAccount is not null)
+                        {
+                            <div>@post.SocialAccount.DisplayName</div>
+                            <small class="text-muted">@post.SocialAccount.SecretName</small>
+                        }
+                        else
+                        {
+                            <span class="text-muted">None</span>
+                        }
+                    </td>
+                    <td>@post.Status</td>
+                    <td>
+                        @{
+                            var easternScheduledTime = TimeZoneInfo.ConvertTimeFromUtc(
+                                post.ScheduledUtc,
+                                easternTimeZone);
+                        }
+
+                        @easternScheduledTime.ToString("yyyy-MM-dd h:mm tt") Eastern
+                        <br />
+                        <small class="text-muted">
+                            UTC: @post.ScheduledUtc.ToString("yyyy-MM-dd HH:mm")
+                        </small>
+                    </td>
+                    <td>@post.AttemptCount</td>
+                    <td>
+                        @if (!string.IsNullOrWhiteSpace(post.ExternalPostId))
+                        {
+                            <span>@post.ExternalPostId</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">None</span>
+                        }
+                    </td>
+                    <td style="max-width: 350px;">
+                        @post.Caption
+                    </td>
+                    <td>
+                        <a class="btn btn-sm btn-outline-primary mb-1"
+                           asp-controller="ScheduledPosts"
+                           asp-action="Details"
+                           asp-route-id="@post.Id">
+                            Details
+                        </a>
+
+                        @if (post.Status != ListingAutoPosterSandbox.Web.Models.PostStatus.Posted)
+                        {
+                            <form asp-controller="ScheduledPosts"
+                                  asp-action="PublishNow"
+                                  method="post">
+                                @Html.AntiForgeryToken()
+
+                                <input type="hidden" name="id" value="@post.Id" />
+
+                                <button type="submit" class="btn btn-sm btn-success">
+                                    Publish Now
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <div class="text-muted">Published</div>
+                        }
+                    </td>
+                </tr>
+
+                @if (!string.IsNullOrWhiteSpace(post.LastError))
+                {
+                    <tr>
+                        <td colspan="9" class="text-danger">
+                            Last error: @post.LastError
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+}
+
+<a class="btn btn-secondary"
+   asp-controller="Listings"
+   asp-action="Index">
+    Back to Listings
+</a>
