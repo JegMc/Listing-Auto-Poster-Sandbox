@@ -14,8 +14,9 @@ Listing
 -> fake token store is used
 -> publish attempt is logged
 -> post status updates to Posted or Failed
-
+```
 Current Features
+```text
 ASP.NET Core MVC web app
 Real estate listing display
 OpenAI-powered caption generation
@@ -31,7 +32,10 @@ Fake token-store abstraction
 Publish attempt logging
 Scheduled post details page
 Eastern time display with UTC storage
+```
+
 Tech Stack
+```text
 C#
 ASP.NET Core MVC
 .NET 9
@@ -56,7 +60,10 @@ ListingAutoPosterSandbox
     ├── Program.cs
     ├── appsettings.json
     └── appsettings.Development.json
+```
+
 Main Application Flow
+```text
 1. Listings
 
 The user starts on the Listings page and selects a sample real estate listing.
@@ -102,7 +109,7 @@ token fingerprint
 The app saves the result to the database and creates a PostAttempt record.
 
 Database Tables
-
+```text
 The app currently uses these main tables:
 
 Listings
@@ -127,10 +134,11 @@ SocialAccounts
 Stores connected social account metadata.
 
 Important: this table stores a SecretName reference, not an actual access token.
+```
 
 
 Local Setup
-
+```text
 Clone the repository:
 
 git clone git@github.com:JegMc/Listing-Auto-Poster-Sandbox.git
@@ -167,3 +175,4 @@ dotnet tool install --global dotnet-ef --version 9.0.0
 If it is already installed:
 
 dotnet tool update --global dotnet-ef --version 9.0.0
+```
