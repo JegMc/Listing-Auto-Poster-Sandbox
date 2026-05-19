@@ -76,3 +76,61 @@ Hangfire/background service publishes when due
 Platform API returns success/failure
         ↓
 App saves the result for auditing
+
+```
+
+Project structure
+```text
+ListingAutoPosterSandbox
+├── ListingAutoPosterSandbox.sln
+├── README.md
+├── .gitignore
+└── ListingAutoPosterSandbox.Web
+    ├── Controllers
+    │   ├── HomeController.cs
+    │   ├── ListingsController.cs
+    │   ├── ScheduledPostsController.cs
+    │   ├── SocialAccountsController.cs
+    │   ├── FacebookOAuthController.cs
+    │   └── FacebookTestController.cs
+    ├── Data
+    │   └── AppDbContext.cs
+    ├── Migrations
+    ├── Models
+    │   ├── Listing.cs
+    │   ├── ScheduledPost.cs
+    │   ├── PostAttempt.cs
+    │   ├── SocialAccount.cs
+    │   ├── FacebookPostReviewViewModel.cs
+    │   ├── FacebookTestViewModel.cs
+    │   ├── GeneratedCaptionViewModel.cs
+    │   ├── PostPlatform.cs
+    │   └── PostStatus.cs
+    ├── Services
+    │   ├── ICaptionGenerator.cs
+    │   ├── OpenAiCaptionGenerator.cs
+    │   ├── IDuePostScanner.cs
+    │   ├── DuePostScanner.cs
+    │   ├── IScheduledPostPublisher.cs
+    │   ├── ScheduledPostPublisher.cs
+    │   ├── IPlatformPoster.cs
+    │   ├── FacebookPagePoster.cs
+    │   ├── FacebookOAuthService.cs
+    │   ├── FacebookOAuthModels.cs
+    │   ├── FacebookOptions.cs
+    │   ├── ITokenStore.cs
+    │   ├── LocalFacebookTokenStore.cs
+    │   ├── FakePlatformPoster.cs
+    │   └── FakeTokenStore.cs
+    ├── Views
+    │   ├── Home
+    │   ├── Listings
+    │   ├── ScheduledPosts
+    │   ├── SocialAccounts
+    │   ├── FacebookOAuth
+    │   └── FacebookTest
+    ├── wwwroot
+    ├── Program.cs
+    ├── appsettings.json
+    └── appsettings.Development.json
+```
