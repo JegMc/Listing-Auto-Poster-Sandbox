@@ -5,14 +5,14 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// MVC is the web framework layer. It lets the app use Controllers, Views, and Razor pages.
+// MVC / Razor view support.
 builder.Services.AddControllersWithViews();
 
-// Authorization is registered now so controller/action authorization can be added later if needed.
+// Authorization is registered for future controller/action authorization.
+// The app does not have user login/authentication yet.
 builder.Services.AddAuthorization();
 
-// Session stores temporary browser-session data.
-// This app uses it during flows like Facebook OAuth, where short-lived state may need to survive redirects.
+// Session is used by the Facebook OAuth flow to store short-lived redirect state.
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -22,37 +22,38 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is missing.");
 
 // Main application database.
-// This stores app data such as Listings, ScheduledPosts, PostAttempts, and SocialAccounts.
+// Stores Listings, ScheduledPosts, PostAttempts, and SocialAccounts.
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// Hangfire uses SQL Server to store background job data.
-// For this sandbox, Hangfire uses the same SQL Server connection as the main app.
+// Hangfire background job storage.
+// For this sandbox, Hangfire uses the same LocalDB connection as the app.
 builder.Services.AddHangfire(configuration =>
     configuration.UseSqlServerStorage(connectionString));
 
 builder.Services.AddHangfireServer();
 
-// Facebook settings are loaded from configuration.
-// In local development, sensitive values should come from user secrets or environment variables,
-// not from committed appsettings files.
+// Facebook configuration.
+// Sensitive values should come from user-secrets or environment variables,
+// not committed appsettings files.
 builder.Services.Configure<FacebookOptions>(
     builder.Configuration.GetSection("Facebook"));
 
-// Typed HttpClients give these Facebook services a reusable, DI-managed HttpClient.
+// Typed HTTP clients for Meta Graph API services.
 builder.Services.AddHttpClient<FacebookPagePoster>();
 builder.Services.AddHttpClient<FacebookOAuthService>();
 
-// IPlatformPoster is the app-level posting abstraction.
-// The active implementation is FacebookPagePoster, so scheduled publishing posts to Facebook.
+// Active social publishing path.
+// ScheduledPostPublisher depends on IPlatformPoster, and this points to the real Facebook poster.
 builder.Services.AddScoped<IPlatformPoster>(serviceProvider =>
     serviceProvider.GetRequiredService<FacebookPagePoster>());
 
-// LocalFacebookTokenStore stores Facebook tokens locally for this sandbox.
-// It is registered as a singleton so the same file-backed token store is reused across the app.
+// Active local token path.
+// LocalFacebookTokenStore writes to App_Data/facebook-tokens.local.json for sandbox testing.
 builder.Services.AddSingleton<LocalFacebookTokenStore>();
 builder.Services.AddSingleton<ITokenStore>(serviceProvider =>
     serviceProvider.GetRequiredService<LocalFacebookTokenStore>());
@@ -64,8 +65,6 @@ builder.Services.AddScoped<IDuePostScanner, DuePostScanner>();
 
 var app = builder.Build();
 
-// Production-only error handling.
-// In Development, ASP.NET shows detailed error pages to make debugging easier.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -75,10 +74,14 @@ if (!app.Environment.IsDevelopment())
 app.UseSession();
 app.UseAuthorization();
 
-app.UseHangfireDashboard("/hangfire");
+// Hangfire Dashboard is useful locally, but should not be exposed in production
+// until authentication/authorization is added.
+if (app.Environment.IsDevelopment())
+{
+    app.UseHangfireDashboard("/hangfire");
+}
 
-// Every minute, Hangfire asks the app to find scheduled posts that are due.
-// DuePostScanner then enqueues publish work through the normal ScheduledPost pipeline.
+// Every minute, Hangfire asks the app to enqueue posts that are due.
 RecurringJob.AddOrUpdate<IDuePostScanner>(
     "enqueue-due-scheduled-posts",
     scanner => scanner.EnqueueDuePostsAsync(),
