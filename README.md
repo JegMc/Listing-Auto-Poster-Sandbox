@@ -7,19 +7,20 @@
 ![Meta Graph API](https://img.shields.io/badge/Meta%20Graph%20API-Facebook%20Posting-1877F2?style=for-the-badge&logo=facebook&logoColor=white)
 ![Status](https://img.shields.io/badge/Status-Active%20Sandbox-brightgreen?style=for-the-badge)
 
-A learning sandbox for building an AI-assisted social media auto-poster with ASP.NET Core, Entity Framework Core, SQL Server LocalDB, Hangfire, OpenAI caption generation, and real Facebook Page posting through the Meta Graph API.
+A learning sandbox for building an AI-assisted social media auto-poster with ASP.NET Core MVC, Entity Framework Core, SQL Server LocalDB, Hangfire, OpenAI caption generation, and Facebook Page publishing through the Meta Graph API.
 
-This repo started as a fake social-posting pipeline, but it now has a working Facebook proof of concept:
+This project started as a fake social-posting pipeline. It now includes a working Facebook proof of concept:
 
-- pick a listing
+- connect or represent a Facebook Page as a `SocialAccount`
+- pick a sample listing
 - generate an AI-written Facebook caption
 - review and edit the caption before publishing
 - create a durable `ScheduledPost` database row
 - publish through the same scheduled-post pipeline used by the app
-- send the final text to a real Facebook Page
-- save Meta's returned post ID and the publish attempt details
+- send the final text to a real Facebook Page through the Meta Graph API
+- save Meta's returned post ID and publish attempt details
 
-This is still a sandbox, not a production-ready social media tool. The point is to prove the architecture and learn the implementation path one phase at a time.
+This is still a sandbox, not a production-ready social media product. The purpose is to prove the architecture and learn the implementation path one phase at a time.
 
 ---
 
@@ -33,22 +34,23 @@ This is still a sandbox, not a production-ready social media tool. The point is 
 - review/edit page before Facebook publishing
 - `ScheduledPosts` database pipeline
 - `PostAttempts` logging
-- real Facebook Page text posting through Meta Graph API
+- real Facebook Page text posting through the Meta Graph API
 - `SocialAccount.PlatformAccountId` used as the Facebook Page ID
-- temporary local Page token stored with `.NET user-secrets`
-- Hangfire dashboard and recurring background scan flow
+- local Facebook OAuth/token-store experiment
+- Hangfire dashboard and recurring due-post scan flow
 - details page showing post status, attempts, response JSON, and external post ID
 
 ### Still intentionally temporary
 
-- Facebook token is manually stored in local user-secrets
-- OAuth is not finished yet
+- local token storage is file-based for sandbox testing
+- Facebook OAuth flow is still being hardened
 - only Facebook text posting is implemented
-- no image upload/posting yet
-- no user authentication
+- no Facebook image/photo posting yet
+- no Instagram, LinkedIn, TikTok, or YouTube integration yet
+- no user authentication or brokerage-level permissions
 - no production secret storage
 - Hangfire dashboard is not production-secured
-- fake service files may still exist from earlier phases, but the active Facebook test path now uses the real `FacebookPagePoster`
+- fake service files may still exist from earlier phases, but the active Facebook posting path uses `FacebookPagePoster`
 
 ---
 
