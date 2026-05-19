@@ -7,50 +7,58 @@
 ![Meta Graph API](https://img.shields.io/badge/Meta%20Graph%20API-Facebook%20Posting-1877F2?style=for-the-badge&logo=facebook&logoColor=white)
 ![Status](https://img.shields.io/badge/Status-Active%20Sandbox-brightgreen?style=for-the-badge)
 
-A learning sandbox for building an AI-assisted social media auto-poster with ASP.NET Core MVC, Entity Framework Core, SQL Server LocalDB, Hangfire, OpenAI caption generation, and Facebook Page publishing through the Meta Graph API.
+A learning sandbox for building an AI-assisted social media auto-poster with **ASP.NET Core MVC**, **Entity Framework Core**, **SQL Server LocalDB**, **Hangfire**, **OpenAI caption generation**, and **Facebook Page publishing through the Meta Graph API**.
 
-This project started as a fake social-posting pipeline. It now includes a working Facebook proof of concept:
+This project started as a fake social-posting pipeline. It now includes a working Facebook proof of concept where a user can select a listing, generate an AI-written Facebook caption, review/edit the post text, publish to a real Facebook Page, and inspect the stored publish result.
 
-- connect or represent a Facebook Page as a `SocialAccount`
-- pick a sample listing
-- generate an AI-written Facebook caption
-- review and edit the caption before publishing
-- create a durable `ScheduledPost` database row
-- publish through the same scheduled-post pipeline used by the app
-- send the final text to a real Facebook Page through the Meta Graph API
-- save Meta's returned post ID and publish attempt details
-
-This is still a sandbox, not a production-ready social media product. The purpose is to prove the architecture and learn the implementation path one phase at a time.
+This is still a sandbox, not a production-ready social media platform.
 
 ---
 
-## Current Project Status
+## Current Status
 
 ### Working now
 
-- ASP.NET Core MVC dashboard
-- sample listing cards
-- OpenAI caption generation
-- review/edit page before Facebook publishing
-- `ScheduledPosts` database pipeline
-- `PostAttempts` logging
-- real Facebook Page text posting through the Meta Graph API
-- `SocialAccount.PlatformAccountId` used as the Facebook Page ID
-- local Facebook OAuth/token-store experiment
-- Hangfire dashboard and recurring due-post scan flow
-- details page showing post status, attempts, response JSON, and external post ID
+- ASP.NET Core MVC web app
+- SQL Server LocalDB persistence through EF Core
+- Sample listing cards
+- OpenAI-generated listing captions
+- Facebook-specific review/edit page before publishing
+- `ScheduledPost` database pipeline
+- `PostAttempt` publish logging
+- Real Facebook Page text posting through the Meta Graph API
+- `SocialAccount.PlatformAccountId` stored as the Facebook Page ID
+- Local Facebook OAuth/token-store experiment
+- Hangfire dashboard
+- Recurring Hangfire scan for due scheduled posts
+- Scheduled post details page showing:
+  - current status
+  - related listing
+  - related social account
+  - publish attempts
+  - response JSON
+  - external Facebook post ID
+
+### Recently cleaned up
+
+- Reorganized services so Facebook-specific code is easier to find.
+- Moved fake services into a development-only area.
+- Retired the old manual Facebook test endpoint into `docs/retired-code`.
+- Moved ViewModels out of `Models` and into a dedicated `ViewModels` folder.
+- Cleaned controller readability while preserving the current app behavior.
+- Kept beginner-facing comments where they help explain the code.
 
 ### Still intentionally temporary
 
-- local token storage is file-based for sandbox testing
-- Facebook OAuth flow is still being hardened
-- only Facebook text posting is implemented
-- no Facebook image/photo posting yet
-- no Instagram, LinkedIn, TikTok, or YouTube integration yet
-- no user authentication or brokerage-level permissions
-- no production secret storage
-- Hangfire dashboard is not production-secured
-- fake service files may still exist from earlier phases, but the active Facebook posting path uses `FacebookPagePoster`
+- Local Facebook token storage is file-based for sandbox testing.
+- Facebook OAuth flow is still experimental.
+- Only Facebook text posting is implemented.
+- Facebook image/photo posting is not implemented yet.
+- Instagram, LinkedIn, TikTok, and YouTube integrations are not implemented yet.
+- No user authentication or brokerage-level permissions yet.
+- No production secret storage yet.
+- Hangfire dashboard is not secured for production use.
+- The app still contains an older generic caption/scheduling flow alongside the newer Facebook review/publish flow.
 
 ---
 
@@ -76,7 +84,6 @@ Hangfire/background service publishes when due
 Platform API returns success/failure
         ↓
 App saves the result for auditing
-
 ```
 
 Project structure
@@ -85,14 +92,20 @@ ListingAutoPosterSandbox
 ├── ListingAutoPosterSandbox.sln
 ├── README.md
 ├── .gitignore
+├── docs
+│   └── retired-code
+│       └── facebook-test-endpoint
+│           ├── README.md
+│           ├── FacebookTestController.cs.txt
+│           ├── FacebookTestViewModel.cs.txt
+│           └── Index.cshtml.txt
 └── ListingAutoPosterSandbox.Web
     ├── Controllers
     │   ├── HomeController.cs
     │   ├── ListingsController.cs
     │   ├── ScheduledPostsController.cs
     │   ├── SocialAccountsController.cs
-    │   ├── FacebookOAuthController.cs
-    │   └── FacebookTestController.cs
+    │   └── FacebookOAuthController.cs
     ├── Data
     │   └── AppDbContext.cs
     ├── Migrations
@@ -101,12 +114,22 @@ ListingAutoPosterSandbox
     │   ├── ScheduledPost.cs
     │   ├── PostAttempt.cs
     │   ├── SocialAccount.cs
-    │   ├── FacebookPostReviewViewModel.cs
-    │   ├── FacebookTestViewModel.cs
-    │   ├── GeneratedCaptionViewModel.cs
     │   ├── PostPlatform.cs
     │   └── PostStatus.cs
+    ├── ViewModels
+    │   ├── FacebookPostReviewViewModel.cs
+    │   ├── GeneratedCaptionViewModel.cs
+    │   └── CreateScheduledPostViewModel.cs
     ├── Services
+    │   ├── Facebook
+    │   │   ├── FacebookOAuthModels.cs
+    │   │   ├── FacebookOAuthService.cs
+    │   │   ├── FacebookOptions.cs
+    │   │   ├── FacebookPagePoster.cs
+    │   │   └── FacebookPostResult.cs
+    │   ├── Development
+    │   │   ├── FakePlatformPoster.cs
+    │   │   └── FakeTokenStore.cs
     │   ├── ICaptionGenerator.cs
     │   ├── OpenAiCaptionGenerator.cs
     │   ├── IDuePostScanner.cs
@@ -114,21 +137,15 @@ ListingAutoPosterSandbox
     │   ├── IScheduledPostPublisher.cs
     │   ├── ScheduledPostPublisher.cs
     │   ├── IPlatformPoster.cs
-    │   ├── FacebookPagePoster.cs
-    │   ├── FacebookOAuthService.cs
-    │   ├── FacebookOAuthModels.cs
-    │   ├── FacebookOptions.cs
     │   ├── ITokenStore.cs
-    │   ├── LocalFacebookTokenStore.cs
-    │   ├── FakePlatformPoster.cs
-    │   └── FakeTokenStore.cs
+    │   └── LocalFacebookTokenStore.cs
     ├── Views
     │   ├── Home
     │   ├── Listings
     │   ├── ScheduledPosts
     │   ├── SocialAccounts
     │   ├── FacebookOAuth
-    │   └── FacebookTest
+    │   └── Shared
     ├── wwwroot
     ├── Program.cs
     ├── appsettings.json
