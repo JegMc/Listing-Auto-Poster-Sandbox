@@ -1,14 +1,18 @@
+using Hangfire;
 using ListingAutoPosterSandbox.Web.Data;
 using ListingAutoPosterSandbox.Web.Services;
 using Microsoft.EntityFrameworkCore;
-using Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// here we add services to the dependency injection container. This includes framework services like controllers and session management, 
-//as well as our own application services for handling Facebook OAuth, token storage, caption generation, and scheduled post publishing.
+// MVC is the web framework layer. It lets the app use Controllers, Views, and Razor pages.
 builder.Services.AddControllersWithViews();
+
+// Authorization is registered now so controller/action authorization can be added later if needed.
 builder.Services.AddAuthorization();
+
+// Session stores temporary browser-session data.
+// This app uses it during flows like Facebook OAuth, where short-lived state may need to survive redirects.
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -18,64 +22,63 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-//AddDbContext 
-// here we use the same SQL Server database for both the application data and Hangfire's job storage for simplicity.
+// Main application database.
+// This stores app data such as Listings, ScheduledPosts, PostAttempts, and SocialAccounts.
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-//Addhangfire 
+// Hangfire uses SQL Server to store background job data.
+// For this sandbox, Hangfire uses the same SQL Server connection as the main app.
 builder.Services.AddHangfire(configuration =>
     configuration.UseSqlServerStorage(connectionString));
 
 builder.Services.AddHangfireServer();
 
-// here we configure options for our Facebook integration by binding the "Facebook" section of our configuration (which could come from appsettings.json, environment variables, 
-// or user secrets) to a strongly-typed FacebookOptions class. This allows us to easily access these settings throughout our application via dependency injection.
-builder.Services.Configure<ListingAutoPosterSandbox.Web.Services.FacebookOptions>(
+// Facebook settings are loaded from configuration.
+// In local development, sensitive values should come from user secrets or environment variables,
+// not from committed appsettings files.
+builder.Services.Configure<FacebookOptions>(
     builder.Configuration.GetSection("Facebook"));
 
-//AddHtpClient
-builder.Services.AddHttpClient<ListingAutoPosterSandbox.Web.Services.FacebookPagePoster>();
-builder.Services.AddHttpClient<ListingAutoPosterSandbox.Web.Services.FacebookOAuthService>();
+// Typed HttpClients give these Facebook services a reusable, DI-managed HttpClient.
+builder.Services.AddHttpClient<FacebookPagePoster>();
+builder.Services.AddHttpClient<FacebookOAuthService>();
 
-builder.Services.AddScoped<ListingAutoPosterSandbox.Web.Services.IPlatformPoster>(
-    serviceProvider =>
-        serviceProvider.GetRequiredService<ListingAutoPosterSandbox.Web.Services.FacebookPagePoster>());
+// IPlatformPoster is the app-level posting abstraction.
+// The active implementation is FacebookPagePoster, so scheduled publishing posts to Facebook.
+builder.Services.AddScoped<IPlatformPoster>(serviceProvider =>
+    serviceProvider.GetRequiredService<FacebookPagePoster>());
 
-//AddSingleton 
-builder.Services.AddSingleton<ListingAutoPosterSandbox.Web.Services.LocalFacebookTokenStore>();
+// LocalFacebookTokenStore stores Facebook tokens locally for this sandbox.
+// It is registered as a singleton so the same file-backed token store is reused across the app.
+builder.Services.AddSingleton<LocalFacebookTokenStore>();
+builder.Services.AddSingleton<ITokenStore>(serviceProvider =>
+    serviceProvider.GetRequiredService<LocalFacebookTokenStore>());
 
-builder.Services.AddSingleton<ListingAutoPosterSandbox.Web.Services.ITokenStore>(
-    serviceProvider =>
-        serviceProvider.GetRequiredService<ListingAutoPosterSandbox.Web.Services.LocalFacebookTokenStore>());
-
-//Addscoped
-// here we register our application services with the dependency injection container. This allows us to inject these services into controllers or other services as needed.
+// Application services.
 builder.Services.AddScoped<ICaptionGenerator, OpenAiCaptionGenerator>();
 builder.Services.AddScoped<IScheduledPostPublisher, ScheduledPostPublisher>();
 builder.Services.AddScoped<IDuePostScanner, DuePostScanner>();
 
-//builder.Services.AddScoped<ITokenStore, FakeTokenStore>();
-//builder.Services.AddScoped<IPlatformPoster, FakePlatformPoster>();
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Production-only error handling.
+// In Development, ASP.NET shows detailed error pages to make debugging easier.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseSession();
-
 app.UseAuthorization();
 
 app.UseHangfireDashboard("/hangfire");
 
+// Every minute, Hangfire asks the app to find scheduled posts that are due.
+// DuePostScanner then enqueues publish work through the normal ScheduledPost pipeline.
 RecurringJob.AddOrUpdate<IDuePostScanner>(
     "enqueue-due-scheduled-posts",
     scanner => scanner.EnqueueDuePostsAsync(),

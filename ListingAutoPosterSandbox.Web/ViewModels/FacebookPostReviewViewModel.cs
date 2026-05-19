@@ -1,7 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace ListingAutoPosterSandbox.Web.Models;
+namespace ListingAutoPosterSandbox.Web.ViewModels;
 
+/// <summary>
+/// View model for the Facebook post review page.
+/// 
+/// This is not a database table. It only carries data between the controller
+/// and the Razor view so the user can review/edit the AI-generated post before publishing.
+/// </summary>
 public sealed class FacebookPostReviewViewModel
 {
     [Required]

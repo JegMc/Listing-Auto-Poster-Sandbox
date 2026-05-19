@@ -26,18 +26,13 @@ public sealed class FacebookOAuthController : Controller
         _tokenStore = tokenStore;
     }
 
+    // Starts the Facebook OAuth connection flow.
+    // This sends the user to Facebook so they can grant Page access to the sandbox app.
     [HttpGet]
     public IActionResult Connect()
     {
-        var state = Guid.NewGuid().ToString("N");
-
-        HttpContext.Session.SetString(OAuthStateSessionKey, state);
-
-        var redirectUri = Url.Action(
-            action: nameof(Callback),
-            controller: "FacebookOAuth",
-            values: null,
-            protocol: Request.Scheme)!;
+        var state = CreateAndStoreOAuthState();
+        var redirectUri = BuildCallbackRedirectUri();
 
         var authorizationUrl = _facebookOAuthService.BuildAuthorizationUrl(
             redirectUri,
@@ -46,6 +41,9 @@ public sealed class FacebookOAuthController : Controller
         return Redirect(authorizationUrl);
     }
 
+    // Handles Facebook's redirect after the user approves or rejects the OAuth request.
+    // This action validates the OAuth response, gets Page access tokens, and either saves the only Page
+    // or asks the user to choose which Page the sandbox should publish to.
     [HttpGet]
     public async Task<IActionResult> Callback(
         string? code,
@@ -57,107 +55,175 @@ public sealed class FacebookOAuthController : Controller
     {
         if (!string.IsNullOrWhiteSpace(error))
         {
-            TempData["Error"] =
-                $"Facebook connection failed: {error}. {error_description ?? error_reason}";
+            TempData["Error"] = BuildFacebookErrorMessage(
+                error,
+                error_reason,
+                error_description);
 
-            return RedirectToAction("Index", "SocialAccounts");
+            return RedirectToSocialAccountsIndex();
         }
 
         if (string.IsNullOrWhiteSpace(code))
         {
             TempData["Error"] = "Facebook did not return an OAuth code.";
-            return RedirectToAction("Index", "SocialAccounts");
+
+            return RedirectToSocialAccountsIndex();
         }
 
-        var expectedState = HttpContext.Session.GetString(OAuthStateSessionKey);
-
-        if (string.IsNullOrWhiteSpace(expectedState) ||
-            string.IsNullOrWhiteSpace(state) ||
-            expectedState != state)
+        if (!IsValidOAuthState(state))
         {
             TempData["Error"] = "Facebook OAuth state mismatch. Try connecting again.";
-            return RedirectToAction("Index", "SocialAccounts");
+
+            return RedirectToSocialAccountsIndex();
         }
 
-        var redirectUri = Url.Action(
-            action: nameof(Callback),
-            controller: "FacebookOAuth",
-            values: null,
-            protocol: Request.Scheme)!;
-
-        var shortLivedToken =
-            await _facebookOAuthService.ExchangeCodeForShortLivedTokenAsync(
+        try
+        {
+            var pages = await GetManageableFacebookPagesAsync(
                 code,
-                redirectUri,
                 cancellationToken);
 
-        var longLivedToken =
-            await _facebookOAuthService.ExchangeForLongLivedTokenAsync(
-                shortLivedToken.AccessToken,
-                cancellationToken);
+            if (pages.Count == 0)
+            {
+                TempData["Error"] = "Facebook connected, but no manageable Pages were returned. Confirm your Facebook user has full control of the test Page and granted Page access.";
 
-        var pages = await _facebookOAuthService.GetPagesAsync(
-            longLivedToken.AccessToken,
-            cancellationToken);
+                return RedirectToSocialAccountsIndex();
+            }
 
-        if (pages.Count == 0)
-        {
-            TempData["Error"] =
-                "Facebook connected, but no manageable Pages were returned. Confirm your Facebook user has full control of the test Page and granted Page access.";
+            if (pages.Count == 1)
+            {
+                await SaveConnectedPageAsync(
+                    pages[0],
+                    cancellationToken);
 
-            return RedirectToAction("Index", "SocialAccounts");
+                TempData["Success"] = $"Connected Facebook Page: {pages[0].Name}.";
+
+                return RedirectToSocialAccountsIndex();
+            }
+
+            StorePendingPages(pages);
+
+            return View("SelectPage", pages);
         }
-
-        if (pages.Count == 1)
+        catch (Exception ex)
         {
-            await SaveConnectedPageAsync(pages[0], cancellationToken);
+            TempData["Error"] = $"Facebook connection failed: {ex.Message}";
 
-            TempData["Success"] =
-                $"Connected Facebook Page: {pages[0].Name}.";
-
-            return RedirectToAction("Index", "SocialAccounts");
+            return RedirectToSocialAccountsIndex();
         }
-
-        HttpContext.Session.SetString(
-            PendingPagesSessionKey,
-            JsonSerializer.Serialize(pages));
-
-        return View("SelectPage", pages);
     }
 
+    // Handles the case where the Facebook user manages more than one Page.
+    // The selected Page's access token is saved locally, and the app records the Page as a SocialAccount.
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SelectPage(
         string pageId,
         CancellationToken cancellationToken)
     {
-        var pagesJson = HttpContext.Session.GetString(PendingPagesSessionKey);
+        var pages = GetPendingPagesFromSession();
 
-        if (string.IsNullOrWhiteSpace(pagesJson))
+        if (pages is null)
         {
             TempData["Error"] = "Facebook Page selection expired. Connect Facebook again.";
-            return RedirectToAction("Index", "SocialAccounts");
-        }
 
-        var pages = JsonSerializer.Deserialize<List<FacebookPageAccount>>(pagesJson)
-                    ?? new List<FacebookPageAccount>();
+            return RedirectToSocialAccountsIndex();
+        }
 
         var selectedPage = pages.FirstOrDefault(page => page.Id == pageId);
 
         if (selectedPage is null)
         {
             TempData["Error"] = "Selected Facebook Page was not found in the OAuth response.";
-            return RedirectToAction("Index", "SocialAccounts");
+
+            return RedirectToSocialAccountsIndex();
         }
 
-        await SaveConnectedPageAsync(selectedPage, cancellationToken);
+        await SaveConnectedPageAsync(
+            selectedPage,
+            cancellationToken);
 
+        ClearPendingPages();
+
+        TempData["Success"] = $"Connected Facebook Page: {selectedPage.Name}.";
+
+        return RedirectToSocialAccountsIndex();
+    }
+
+    private string CreateAndStoreOAuthState()
+    {
+        var state = Guid.NewGuid().ToString("N");
+
+        HttpContext.Session.SetString(
+            OAuthStateSessionKey,
+            state);
+
+        return state;
+    }
+
+    private bool IsValidOAuthState(string? returnedState)
+    {
+        var expectedState = HttpContext.Session.GetString(OAuthStateSessionKey);
+
+        HttpContext.Session.Remove(OAuthStateSessionKey);
+
+        return !string.IsNullOrWhiteSpace(expectedState)
+            && !string.IsNullOrWhiteSpace(returnedState)
+            && expectedState == returnedState;
+    }
+
+    private string BuildCallbackRedirectUri()
+    {
+        return Url.Action(
+            action: nameof(Callback),
+            controller: "FacebookOAuth",
+            values: null,
+            protocol: Request.Scheme)!;
+    }
+
+    private async Task<List<FacebookPageAccount>> GetManageableFacebookPagesAsync(
+        string code,
+        CancellationToken cancellationToken)
+    {
+        var redirectUri = BuildCallbackRedirectUri();
+
+        var shortLivedToken = await _facebookOAuthService.ExchangeCodeForShortLivedTokenAsync(
+            code,
+            redirectUri,
+            cancellationToken);
+
+        var longLivedToken = await _facebookOAuthService.ExchangeForLongLivedTokenAsync(
+            shortLivedToken.AccessToken,
+            cancellationToken);
+
+        return await _facebookOAuthService.GetPagesAsync(
+            longLivedToken.AccessToken,
+            cancellationToken);
+    }
+
+    private void StorePendingPages(List<FacebookPageAccount> pages)
+    {
+        HttpContext.Session.SetString(
+            PendingPagesSessionKey,
+            JsonSerializer.Serialize(pages));
+    }
+
+    private List<FacebookPageAccount>? GetPendingPagesFromSession()
+    {
+        var pagesJson = HttpContext.Session.GetString(PendingPagesSessionKey);
+
+        if (string.IsNullOrWhiteSpace(pagesJson))
+        {
+            return null;
+        }
+
+        return JsonSerializer.Deserialize<List<FacebookPageAccount>>(pagesJson)
+            ?? new List<FacebookPageAccount>();
+    }
+
+    private void ClearPendingPages()
+    {
         HttpContext.Session.Remove(PendingPagesSessionKey);
-
-        TempData["Success"] =
-            $"Connected Facebook Page: {selectedPage.Name}.";
-
-        return RedirectToAction("Index", "SocialAccounts");
     }
 
     private async Task SaveConnectedPageAsync(
@@ -171,22 +237,11 @@ public sealed class FacebookOAuthController : Controller
             page.AccessToken,
             cancellationToken);
 
-        var existingAccount = await _context.SocialAccounts
-            .FirstOrDefaultAsync(
-                account =>
-                    account.Platform == PostPlatform.Facebook &&
-                    account.PlatformAccountId == page.Id,
-                cancellationToken);
+        var existingAccount = await FindExistingFacebookAccountAsync(
+            page.Id,
+            cancellationToken);
 
         var nowUtc = DateTime.UtcNow;
-
-        if (existingAccount is null)
-        {
-            existingAccount = await _context.SocialAccounts
-                .FirstOrDefaultAsync(
-                    account => account.Platform == PostPlatform.Facebook,
-                    cancellationToken);
-        }
 
         if (existingAccount is null)
         {
@@ -211,5 +266,49 @@ public sealed class FacebookOAuthController : Controller
         }
 
         await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task<SocialAccount?> FindExistingFacebookAccountAsync(
+        string pageId,
+        CancellationToken cancellationToken)
+    {
+        var accountForSamePage = await _context.SocialAccounts
+            .FirstOrDefaultAsync(
+                account => account.Platform == PostPlatform.Facebook
+                    && account.PlatformAccountId == pageId,
+                cancellationToken);
+
+        if (accountForSamePage is not null)
+        {
+            return accountForSamePage;
+        }
+
+        // Fallback for earlier sandbox records that may not have had PlatformAccountId yet.
+        return await _context.SocialAccounts
+            .FirstOrDefaultAsync(
+                account => account.Platform == PostPlatform.Facebook,
+                cancellationToken);
+    }
+
+    private IActionResult RedirectToSocialAccountsIndex()
+    {
+        return RedirectToAction(
+            "Index",
+            "SocialAccounts");
+    }
+
+    private static string BuildFacebookErrorMessage(
+        string error,
+        string? errorReason,
+        string? errorDescription)
+    {
+        var details = errorDescription ?? errorReason;
+
+        if (string.IsNullOrWhiteSpace(details))
+        {
+            return $"Facebook connection failed: {error}.";
+        }
+
+        return $"Facebook connection failed: {error}. {details}";
     }
 }

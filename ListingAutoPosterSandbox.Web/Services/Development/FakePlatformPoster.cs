@@ -3,8 +3,18 @@ using System.Text;
 using System.Text.Json;
 using ListingAutoPosterSandbox.Web.Models;
 
-namespace ListingAutoPosterSandbox.Web.Services;
+namespace ListingAutoPosterSandbox.Web.Services.Development;
 
+/// <summary>
+/// Development-only fake implementation of IPlatformPoster.
+/// 
+/// This class does not post to Facebook. It creates a fake successful publish result.
+/// It is useful for learning, debugging the ScheduledPost pipeline, or testing without
+/// calling the real Meta Graph API.
+/// 
+/// This class is intentionally not registered in Program.cs.
+/// The active production-like path uses FacebookPagePoster.
+/// </summary>
 public class FakePlatformPoster : IPlatformPoster
 {
     public Task<PostResult> PublishAsync(
@@ -22,7 +32,6 @@ public class FakePlatformPoster : IPlatformPoster
         }
 
         var externalPostId = $"fake-{scheduledPost.Platform.ToString().ToLower()}-{Guid.NewGuid():N}";
-
         var tokenFingerprint = CreateTokenFingerprint(accessToken);
 
         var fakeResponse = new
@@ -37,15 +46,13 @@ public class FakePlatformPoster : IPlatformPoster
             publishedUtc = DateTime.UtcNow
         };
 
-        var result = new PostResult
+        return Task.FromResult(new PostResult
         {
             Success = true,
             ExternalPostId = externalPostId,
             ResponseJson = JsonSerializer.Serialize(fakeResponse),
             ErrorMessage = null
-        };
-
-        return Task.FromResult(result);
+        });
     }
 
     private static string CreateTokenFingerprint(string accessToken)

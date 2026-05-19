@@ -1,59 +1,62 @@
-@model List<ListingAutoPosterSandbox.Web.Models.SocialAccount>
+@model IReadOnlyList<ListingAutoPosterSandbox.Web.Models.SocialAccount>
 
 @{
     ViewData["Title"] = "Social Accounts";
 }
 
-<h1>Social Accounts</h1>
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+        <h1>Social Accounts</h1>
+        <p class="text-muted mb-0">
+            Connect and review the social accounts this sandbox can publish through.
+        </p>
+    </div>
 
-<p>
-    Connect the Facebook Page that this sandbox should publish to.
-</p>
+    <div class="d-flex gap-2">
+        <a asp-controller="FacebookOAuth"
+           asp-action="Connect"
+           class="btn btn-primary">
+            Connect Facebook Page
+        </a>
+
+        <a asp-controller="Home"
+           asp-action="Index"
+           class="btn btn-outline-secondary">
+            Back to Dashboard
+        </a>
+    </div>
+</div>
 
 @if (TempData["Success"] is string success)
 {
-    <div class="alert alert-success">
+    <div class="alert alert-success" role="alert">
         @success
     </div>
 }
 
 @if (TempData["Error"] is string error)
 {
-    <div class="alert alert-danger">
+    <div class="alert alert-danger" role="alert">
         @error
     </div>
 }
 
-<div class="mb-3">
-    <a asp-controller="FacebookOAuth"
-       asp-action="Connect"
-       class="btn btn-primary">
-        Connect Facebook Page
-    </a>
-
-    <a asp-controller="Home"
-       asp-action="Index"
-       class="btn btn-secondary">
-        Back to Dashboard
-    </a>
-</div>
-
 @if (!Model.Any())
 {
-    <div class="alert alert-warning">
-        No social accounts are connected yet.
+    <div class="alert alert-info" role="alert">
+        No social accounts are connected yet. Use <strong>Connect Facebook Page</strong> to start the Facebook OAuth flow.
     </div>
 }
 else
 {
-    <table class="table table-striped">
+    <table class="table table-striped align-middle">
         <thead>
             <tr>
                 <th>Platform</th>
                 <th>Display Name</th>
                 <th>Platform Account ID</th>
                 <th>Secret Name</th>
-                <th>Connected</th>
+                <th>Connection Status</th>
                 <th>Updated UTC</th>
             </tr>
         </thead>
@@ -65,7 +68,16 @@ else
                     <td>@account.DisplayName</td>
                     <td><code>@account.PlatformAccountId</code></td>
                     <td><code>@account.SecretName</code></td>
-                    <td>@account.IsConnected</td>
+                    <td>
+                        @if (account.IsConnected)
+                        {
+                            <span class="badge bg-success">Connected</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Disconnected</span>
+                        }
+                    </td>
                     <td>@account.UpdatedUtc.ToString("u")</td>
                 </tr>
             }
