@@ -15,4 +15,5 @@ public class SocialAccount
     public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
 
     public DateTime UpdatedUtc { get; set; } = DateTime.UtcNow;
+    public string? PlatformAccountId { get; set; }
 }

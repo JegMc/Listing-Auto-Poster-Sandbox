@@ -1,0 +1,76 @@
+@model ListingAutoPosterSandbox.Web.Models.FacebookPostReviewViewModel
+
+@{
+    ViewData["Title"] = "Review Facebook Post";
+}
+
+<h1>Review Facebook Post</h1>
+
+<p>
+    Review and edit the AI-generated Facebook post before publishing it to the test Facebook Page.
+</p>
+
+<div class="card mb-4">
+    <div class="card-header">
+        Listing Preview
+    </div>
+
+    <div class="card-body">
+        @if (!string.IsNullOrWhiteSpace(Model.ListingImageUrl))
+        {
+            <img src="@Model.ListingImageUrl"
+                 alt="@Model.ListingTitle"
+                 class="img-fluid mb-3"
+                 style="max-height: 240px; object-fit: cover;" />
+        }
+
+        <h5 class="card-title">@Model.ListingTitle</h5>
+
+        <p class="card-text">
+            <strong>Location:</strong> @Model.ListingAddress
+        </p>
+
+        <p class="card-text">
+            <strong>Price:</strong> @Model.ListingPrice.ToString("C0")
+        </p>
+
+        <p class="card-text">
+            @Model.ListingDescription
+        </p>
+    </div>
+</div>
+
+<form asp-controller="Listings"
+      asp-action="PublishReviewedFacebookPost"
+      method="post">
+    @Html.AntiForgeryToken()
+
+    <input type="hidden" asp-for="ListingId" />
+    <input type="hidden" asp-for="ListingTitle" />
+    <input type="hidden" asp-for="ListingAddress" />
+    <input type="hidden" asp-for="ListingDescription" />
+    <input type="hidden" asp-for="ListingImageUrl" />
+    <input type="hidden" asp-for="ListingPrice" />
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="Caption" class="form-label"></label>
+
+        <textarea asp-for="Caption"
+                  class="form-control"
+                  rows="10"></textarea>
+
+        <span asp-validation-for="Caption" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-success">
+        Publish Reviewed Post to Facebook
+    </button>
+
+    <a asp-controller="Listings"
+       asp-action="Index"
+       class="btn btn-secondary">
+        Cancel
+    </a>
+</form>

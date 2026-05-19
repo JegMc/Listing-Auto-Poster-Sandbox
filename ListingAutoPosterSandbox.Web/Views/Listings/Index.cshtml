@@ -6,31 +6,76 @@
 
 <h1>Listings</h1>
 
-<p>Select a listing to eventually generate and schedule a social media post.</p>
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success">
+        @success
+    </div>
+}
 
-<div class="row">
-    @foreach (var listing in Model)
-    {
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <img src="@listing.ImageUrl" class="card-img-top" alt="@listing.Title" />
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">
+        @error
+    </div>
+}
 
-                <div class="card-body">
-                    <h5 class="card-title">@listing.Title</h5>
-                    <p class="card-text">@listing.Address</p>
-                    <p class="card-text">
-                        <strong>@listing.Price.ToString("C0")</strong>
-                    </p>
-                    <p class="card-text">@listing.Description</p>
+<p>Select a listing to generate, schedule, or publish a social media post.</p>
 
-                    <a class="btn btn-primary"
-                        asp-controller="Listings"
-                        asp-action="GenerateCaption"
-                        asp-route-id="@listing.Id">
-                        Generate Caption
-                    </a>
+@if (Model is null || !Model.Any())
+{
+    <div class="alert alert-warning">
+        No listings were found.
+    </div>
+}
+else
+{
+    <div class="row">
+        @foreach (var listing in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <img src="@listing.ImageUrl"
+                         class="card-img-top"
+                         alt="@listing.Title" />
+
+                    <div class="card-body">
+                        <h5 class="card-title">@listing.Title</h5>
+
+                        <p class="card-text">
+                            @listing.Address
+                        </p>
+
+                        <p class="card-text">
+                            <strong>@listing.Price.ToString("C0")</strong>
+                        </p>
+
+                        <p class="card-text">
+                            @listing.Description
+                        </p>
+
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a class="btn btn-primary"
+                               asp-controller="Listings"
+                               asp-action="GenerateCaption"
+                               asp-route-id="@listing.Id">
+                                Generate Caption
+                            </a>
+                            <form asp-controller="Listings"
+                                asp-action="ReviewAiFacebookPost"
+                                asp-route-id="@listing.Id"
+                                method="post"
+                                class="d-inline">
+                                @Html.AntiForgeryToken()
+
+                                <button type="submit" class="btn btn-success">
+                                    Draft Facebook Post
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    }
-</div>
+        }
+    </div>
+}

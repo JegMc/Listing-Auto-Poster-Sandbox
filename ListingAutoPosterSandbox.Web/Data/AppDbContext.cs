@@ -80,6 +80,7 @@ public class AppDbContext : DbContext
                 Platform = PostPlatform.Facebook,
                 DisplayName = "Demo Facebook Page",
                 SecretName = "dev/social/facebook/demo-page",
+                PlatformAccountId = "1103146319551782",
                 IsConnected = true,
                 CreatedUtc = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                 UpdatedUtc = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)

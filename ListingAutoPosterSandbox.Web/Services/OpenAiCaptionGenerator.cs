@@ -15,7 +15,7 @@ public class OpenAiCaptionGenerator : ICaptionGenerator
         if (string.IsNullOrWhiteSpace(apiKey))
         {
             throw new InvalidOperationException(
-                "OpenAI API key is missing. Set it with:\n\n dotnet user-secrets set \"OpenAI:ApiKey\" \"YOUR_KEY\" \n\n");
+                "OpenAI API key is missing. Set it with: dotnet user-secrets set \"OpenAI:ApiKey\" \"YOUR_KEY\"");
         }
 
         _chatClient = new ChatClient(model: model, apiKey: apiKey);
@@ -28,24 +28,34 @@ public class OpenAiCaptionGenerator : ICaptionGenerator
         var messages = new List<ChatMessage>
         {
             new SystemChatMessage("""
-                You write professional real estate social media captions.
+                You write polished Facebook posts for a brokerage marketing team.
 
                 Rules:
-                - Write one caption only.
-                - Make it sound polished but not exaggerated.
-                - Mention the listing's strongest selling points.
-                - Include 3 to 5 relevant hashtags.
-                - Do not invent facts that are not provided.
-                - Do not include emojis.
+                - Write one Facebook post only.
+                - Use only the listing facts provided.
+                - Do not invent amenities, locations, specs, availability, awards, or contact details.
+                - Do not use emojis.
+                - Do not mention that you are an AI.
+                - Do not use markdown formatting.
+                - Use a professional, clear, marketing-friendly tone.
+                - Keep the post between 80 and 180 words.
+                - End with a soft call to action.
+                - Include 2 to 4 relevant hashtags at the end.
                 """),
-
             new UserChatMessage($"""
-                Create a social media caption for this real estate listing.
+                Create a Facebook post for this listing.
 
-                Title: {listing.Title}
-                Address: {listing.Address}
-                Price: {listing.Price:C0}
-                Description: {listing.Description}
+                Listing title:
+                {listing.Title}
+
+                Address or location:
+                {listing.Address}
+
+                Price:
+                {listing.Price:C0}
+
+                Description:
+                {listing.Description}
                 """)
         };
 

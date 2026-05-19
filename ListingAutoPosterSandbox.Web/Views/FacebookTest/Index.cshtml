@@ -1,0 +1,80 @@
+@model ListingAutoPosterSandbox.Web.Models.FacebookTestViewModel
+
+@{
+    ViewData["Title"] = "Facebook ScheduledPost Pipeline Test";
+}
+
+<h1>Facebook ScheduledPost Pipeline Test</h1>
+
+<p>
+    This test creates a ScheduledPost row, sends it through ScheduledPostPublisher,
+    creates a PostAttempt row, and publishes to the Facebook test Page.
+</p>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success">
+        @success
+    </div>
+}
+
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">
+        @error
+    </div>
+}
+
+@if (!Model.FacebookAccounts.Any())
+{
+    <div class="alert alert-warning">
+        No connected Facebook account exists in the database.
+        The seeded demo Facebook account should exist as SocialAccount ID 1.
+    </div>
+}
+
+<form asp-controller="FacebookTest" asp-action="PostTest" method="post">
+    @Html.AntiForgeryToken()
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="ListingId" class="form-label"></label>
+        <select asp-for="ListingId" class="form-select">
+            @foreach (var listing in Model.Listings)
+            {
+                <option value="@listing.Id">@listing.Label</option>
+            }
+        </select>
+        <span asp-validation-for="ListingId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="FacebookAccountId" class="form-label"></label>
+        <select asp-for="FacebookAccountId" class="form-select">
+            @foreach (var account in Model.FacebookAccounts)
+            {
+                <option value="@account.Id">@account.Label</option>
+            }
+        </select>
+        <span asp-validation-for="FacebookAccountId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Message" class="form-label"></label>
+        <textarea asp-for="Message"
+                  class="form-control"
+                  rows="6"></textarea>
+        <span asp-validation-for="Message" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        Create ScheduledPost and publish to Facebook
+    </button>
+
+    <a asp-controller="Home"
+       asp-action="Index"
+       class="btn btn-secondary">
+        Back to Dashboard
+    </a>
+</form>

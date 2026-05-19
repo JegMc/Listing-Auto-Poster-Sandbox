@@ -35,8 +35,25 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" href="/hangfire">Hangfire Dashboard</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="FacebookTest" asp-action="Index">Facebook Test</a>
+                        </li>
                     </ul>
                 </div>
+                <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Facebook Test</h5>
+                    <p class="card-text">
+                        Send a hardcoded sandbox post to the YATCO BOSS Test Brokerage Facebook Page.
+                    </p>
+
+                    <a asp-controller="FacebookTest"
+                    asp-action="Index"
+                    class="btn btn-primary">
+                        Open Facebook Test
+                    </a>
+                </div>
+            </div>
             </div>
         </nav>
     </header>
