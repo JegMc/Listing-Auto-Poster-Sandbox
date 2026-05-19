@@ -482,3 +482,7 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Local Facebook OAuth token cache
+ListingAutoPosterSandbox.Web/App_Data/facebook-tokens.local.json
+ListingAutoPosterSandbox.Web/App_Data/

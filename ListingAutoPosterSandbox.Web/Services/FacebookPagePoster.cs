@@ -17,23 +17,11 @@ public sealed class FacebookPagePoster : IPlatformPoster
         _options = options.Value;
     }
 
-    public async Task<FacebookPostResult> PublishTextPostAsync(
-        string message,
-        CancellationToken cancellationToken = default)
-    {
-        return await PublishTextPostCoreAsync(
-            message: message,
-            pageId: _options.TestPageId,
-            accessToken: _options.TestPageAccessToken,
-            cancellationToken: cancellationToken);
-    }
-
     public async Task<PostResult> PublishAsync(
         ScheduledPost scheduledPost,
         string accessToken,
         CancellationToken cancellationToken = default)
     {
-        Console.WriteLine("REAL FACEBOOK PAGE POSTER WAS CALLED FOR SCHEDULED POST " + scheduledPost.Id);
 
         if (scheduledPost.Platform != PostPlatform.Facebook)
         {

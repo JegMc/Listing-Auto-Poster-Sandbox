@@ -1,0 +1,74 @@
+@model List<ListingAutoPosterSandbox.Web.Models.SocialAccount>
+
+@{
+    ViewData["Title"] = "Social Accounts";
+}
+
+<h1>Social Accounts</h1>
+
+<p>
+    Connect the Facebook Page that this sandbox should publish to.
+</p>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success">
+        @success
+    </div>
+}
+
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger">
+        @error
+    </div>
+}
+
+<div class="mb-3">
+    <a asp-controller="FacebookOAuth"
+       asp-action="Connect"
+       class="btn btn-primary">
+        Connect Facebook Page
+    </a>
+
+    <a asp-controller="Home"
+       asp-action="Index"
+       class="btn btn-secondary">
+        Back to Dashboard
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-warning">
+        No social accounts are connected yet.
+    </div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Platform</th>
+                <th>Display Name</th>
+                <th>Platform Account ID</th>
+                <th>Secret Name</th>
+                <th>Connected</th>
+                <th>Updated UTC</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var account in Model)
+            {
+                <tr>
+                    <td>@account.Platform</td>
+                    <td>@account.DisplayName</td>
+                    <td><code>@account.PlatformAccountId</code></td>
+                    <td><code>@account.SecretName</code></td>
+                    <td>@account.IsConnected</td>
+                    <td>@account.UpdatedUtc.ToString("u")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

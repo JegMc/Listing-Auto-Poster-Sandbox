@@ -29,6 +29,13 @@
                 <small class="text-muted">
                     Secret reference: @Model.SocialAccount.SecretName
                 </small>
+                @if (!string.IsNullOrWhiteSpace(Model.SocialAccount.PlatformAccountId))
+                {
+                    <br />
+                    <small class="text-muted">
+                        Platform Account ID: @Model.SocialAccount.PlatformAccountId
+                    </small>
+}
             }
             else
             {

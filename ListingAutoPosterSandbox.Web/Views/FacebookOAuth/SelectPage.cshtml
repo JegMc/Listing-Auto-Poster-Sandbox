@@ -1,0 +1,40 @@
+@model List<ListingAutoPosterSandbox.Web.Services.FacebookPageAccount>
+
+@{
+    ViewData["Title"] = "Select Facebook Page";
+}
+
+<h1>Select Facebook Page</h1>
+
+<p>
+    Your Facebook account can manage multiple Pages. Select the Page this sandbox should publish to.
+</p>
+
+<form asp-controller="FacebookOAuth"
+      asp-action="SelectPage"
+      method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="mb-3">
+        <label for="pageId" class="form-label">Facebook Page</label>
+
+        <select id="pageId" name="pageId" class="form-select">
+            @foreach (var fbPage in Model)
+            {
+                <option value="@fbPage.Id">
+                    @fbPage.Name (@fbPage.Id)
+                </option>
+            }
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        Use Selected Page
+    </button>
+
+    <a asp-controller="SocialAccounts"
+       asp-action="Index"
+       class="btn btn-secondary">
+        Cancel
+    </a>
+</form>
