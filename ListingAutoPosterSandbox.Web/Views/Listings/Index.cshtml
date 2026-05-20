@@ -4,208 +4,231 @@
     ViewData["Title"] = "Listings";
 }
 
-<h1>Listings</h1>
-
-@if (TempData["Success"] is string success)
-{
-    <div class="alert alert-success">
-        @success
-    </div>
-}
-
-@if (TempData["Error"] is string error)
-{
-    <div class="alert alert-danger">
-        @error
-    </div>
-}
-
-<p>Select a listing to generate, schedule, or publish a social media post.</p>
-    <div class="card mb-4 border-primary">
-        <div class="card-header bg-primary text-white">
-            Custom Yacht Post
+<div class="yatco-page-shell">
+    <section class="yatco-page-header">
+        <div>
+            <p class="yatco-eyebrow">Yacht Inventory</p>
+            <h1>Listings</h1>
+            <p>
+                Select a yacht listing or create a custom yacht post. The next step generates a caption,
+                lets you choose connected social accounts, and schedules the post.
+            </p>
         </div>
 
-        <div class="card-body">
-            <p class="text-muted">
-                Enter any yacht, brokerage, buyer, seller, or marketing information. The AI will turn it into a yacht-focused social media caption.
-            </p>
+        <a asp-controller="ScheduledPosts" asp-action="Index" class="btn yatco-secondary-button">
+            View Scheduled Posts
+        </a>
+    </section>
 
-            <form asp-controller="Listings" asp-action="GenerateCustomCaption" method="post">
-                @Html.AntiForgeryToken()
+    @if (TempData["Success"] is string success)
+    {
+        <div class="yatco-alert yatco-alert-success">
+            @success
+        </div>
+    }
 
-                <div class="mb-3">
-                    <label class="form-label" for="CustomDetails">Custom Information</label>
-                    <textarea class="form-control"
-                            id="CustomDetails"
-                            name="CustomDetails"
-                            rows="6"
-                            required
-                            placeholder="Example: Create a professional yacht broker post for a 90 ft Benetti in Palm Beach. Mention modern interior updates, strong charter potential, outdoor entertaining space, and a soft call to action."></textarea>
-                    <div class="form-text">
-                        This can be structured data, rough notes, or a plain English request.
+    @if (TempData["Error"] is string error)
+    {
+        <div class="yatco-alert yatco-alert-error">
+            @error
+        </div>
+    }
+
+    <section class="yatco-custom-card">
+        <div class="yatco-custom-card-header">
+            <div>
+                <p class="yatco-eyebrow">Custom Input</p>
+                <h2>Custom Yacht Post</h2>
+                <p>
+                    Enter yacht, brokerage, buyer, seller, or marketing notes. The AI will convert them into
+                    yacht-focused social media copy.
+                </p>
+            </div>
+        </div>
+
+        <form asp-controller="Listings" asp-action="GenerateCustomCaption" method="post" class="yatco-custom-form">
+            @Html.AntiForgeryToken()
+
+            <div class="yatco-form-group yatco-form-group-wide">
+                <label for="CustomDetails" class="yatco-form-label">Custom Information</label>
+                <textarea id="CustomDetails"
+                          name="CustomDetails"
+                          class="form-control yatco-caption-box"
+                          rows="5"
+                          placeholder="Example: 2021 Sunseeker 88 Yacht in Miami, strong charter appeal, 4 cabins, modern interior, ideal for Bahamas cruising."></textarea>
+                <p class="yatco-helper-text">
+                    This can be structured data, rough notes, or a plain English request.
+                </p>
+            </div>
+
+            <div class="yatco-custom-fields">
+                <div class="yatco-form-group">
+                    <label for="Title" class="yatco-form-label">Yacht / Listing Title</label>
+                    <input id="Title" name="Title" class="form-control yatco-input" />
+                </div>
+
+                <div class="yatco-form-group">
+                    <label for="Builder" class="yatco-form-label">Builder</label>
+                    <input id="Builder" name="Builder" class="form-control yatco-input" />
+                </div>
+
+                <div class="yatco-form-group">
+                    <label for="BrokerageCompany" class="yatco-form-label">Company / Brokerage</label>
+                    <input id="BrokerageCompany" name="BrokerageCompany" class="form-control yatco-input" />
+                </div>
+
+                <div class="yatco-form-group">
+                    <label for="Location" class="yatco-form-label">Location</label>
+                    <input id="Location" name="Location" class="form-control yatco-input" />
+                </div>
+
+                <div class="yatco-form-group">
+                    <label for="LengthFeet" class="yatco-form-label">Length</label>
+                    <div class="yatco-input-with-unit">
+                        <input id="LengthFeet" name="LengthFeet" type="number" step="0.1" class="form-control yatco-input" />
+                        <span>ft</span>
                     </div>
                 </div>
 
-                <details class="mb-3">
-                    <summary class="fw-semibold">Optional structured yacht fields</summary>
+                <div class="yatco-form-group">
+                    <label for="YearBuilt" class="yatco-form-label">Year Built</label>
+                    <input id="YearBuilt" name="YearBuilt" type="number" class="form-control yatco-input" />
+                </div>
 
-                    <div class="row g-3 mt-1">
-                        <div class="col-md-6">
-                            <label class="form-label" for="Title">Yacht / Listing Title</label>
-                            <input class="form-control" id="Title" name="Title" placeholder="Optional" />
-                        </div>
+                <div class="yatco-form-group">
+                    <label for="Cabins" class="yatco-form-label">Cabins</label>
+                    <input id="Cabins" name="Cabins" type="number" class="form-control yatco-input" />
+                </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label" for="Builder">Builder</label>
-                            <input class="form-control" id="Builder" name="Builder" placeholder="Optional" />
-                        </div>
+                <div class="yatco-form-group">
+                    <label for="Guests" class="yatco-form-label">Guests</label>
+                    <input id="Guests" name="Guests" type="number" class="form-control yatco-input" />
+                </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label" for="BrokerageCompany">Company / Brokerage</label>
-                            <input class="form-control" id="BrokerageCompany" name="BrokerageCompany" placeholder="Optional" />
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label" for="Location">Location</label>
-                            <input class="form-control" id="Location" name="Location" placeholder="Optional" />
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label" for="LengthFeet">Length</label>
-                            <div class="input-group">
-                                <input class="form-control" id="LengthFeet" name="LengthFeet" type="number" step="0.1" min="1" placeholder="Optional" />
-                                <span class="input-group-text">ft</span>
-                            </div>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label" for="YearBuilt">Year Built</label>
-                            <input class="form-control" id="YearBuilt" name="YearBuilt" type="number" min="1800" max="2100" placeholder="Optional" />
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label" for="Cabins">Cabins</label>
-                            <input class="form-control" id="Cabins" name="Cabins" type="number" min="0" placeholder="Optional" />
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label" for="Guests">Guests</label>
-                            <input class="form-control" id="Guests" name="Guests" type="number" min="0" placeholder="Optional" />
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label" for="MaxSpeedKnots">Max Speed</label>
-                            <div class="input-group">
-                                <input class="form-control" id="MaxSpeedKnots" name="MaxSpeedKnots" type="number" step="0.1" min="0" placeholder="Optional" />
-                                <span class="input-group-text">kn</span>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label" for="Price">Price</label>
-                            <input class="form-control" id="Price" name="Price" type="number" step="1" min="0" placeholder="Optional" />
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label" for="ImageUrl">Image URL</label>
-                            <input class="form-control" id="ImageUrl" name="ImageUrl" placeholder="Optional. Leave blank if not needed." />
-                        </div>
+                <div class="yatco-form-group">
+                    <label for="MaxSpeedKnots" class="yatco-form-label">Max Speed</label>
+                    <div class="yatco-input-with-unit">
+                        <input id="MaxSpeedKnots" name="MaxSpeedKnots" type="number" step="0.1" class="form-control yatco-input" />
+                        <span>kn</span>
                     </div>
-                </details>
+                </div>
 
-                <button type="submit" class="btn btn-primary">
+                <div class="yatco-form-group">
+                    <label for="Price" class="yatco-form-label">Price</label>
+                    <input id="Price" name="Price" type="number" step="1" class="form-control yatco-input" />
+                </div>
+
+                <div class="yatco-form-group yatco-form-group-wide">
+                    <label for="ImageUrl" class="yatco-form-label">Image URL</label>
+                    <input id="ImageUrl" name="ImageUrl" class="form-control yatco-input" />
+                </div>
+            </div>
+
+            <div class="yatco-action-row">
+                <button type="submit" class="btn yatco-primary-button">
                     Generate Custom Scheduled Post
                 </button>
-            </form>
+            </div>
+        </form>
+    </section>
+
+    <section class="yatco-listing-section">
+        <div class="yatco-section-heading">
+            <div>
+                <p class="yatco-eyebrow">Sample Listings</p>
+                <h2>Choose a Yacht</h2>
+            </div>
         </div>
-    </div>
 
-@if (Model is null || !Model.Any())
-{
-    <div class="alert alert-warning">
-        No listings were found.
-    </div>
-}
-else
-{
-    <div class="row">
-        @foreach (var listing in Model)
+        @if (Model is null || !Model.Any())
         {
-            <div class="col-md-4 mb-4">
-                <div class="card h-100">
-                    <img src="@listing.ImageUrl"
-                         class="card-img-top"
-                         alt="@listing.Title" />
+            <div class="yatco-empty-state">
+                No listings were found.
+            </div>
+        }
+        else
+        {
+            <div class="yatco-listing-grid">
+                @foreach (var listing in Model)
+                {
+                    var location = string.IsNullOrWhiteSpace(listing.Location)
+                        ? listing.Address
+                        : listing.Location;
 
-                    <div class="card-body">
-                        <h5 class="card-title">@listing.Title</h5>
-                            <p class="text-muted mb-2">
-                                @(string.IsNullOrWhiteSpace(listing.Location) ? listing.Address : listing.Location)
-                            </p>
-                            <div class="mb-2">
+                    var imageUrl = string.IsNullOrWhiteSpace(listing.ImageUrl)
+                        ? "https://placehold.co/900x600?text=Yacht+Listing"
+                        : listing.ImageUrl;
+
+                    <article class="yatco-yacht-card">
+                        <div class="yatco-yacht-image-wrap">
+                            <img src="@imageUrl" alt="@listing.Title" class="yatco-yacht-image" />
+                            <span class="yatco-yacht-price">
+                                @(listing.Price > 0 ? listing.Price.ToString("C0") : "Price on request")
+                            </span>
+                        </div>
+
+                        <div class="yatco-yacht-body">
+                            <p class="yatco-eyebrow">Yacht Listing</p>
+                            <h3>@listing.Title</h3>
+
+                            @if (!string.IsNullOrWhiteSpace(location))
+                            {
+                                <p class="yatco-yacht-location">@location</p>
+                            }
+
+                            <div class="yatco-yacht-specs">
                                 @if (!string.IsNullOrWhiteSpace(listing.Builder))
                                 {
-                                    <span class="badge bg-secondary me-1">Builder: @listing.Builder</span>
+                                    <span>Builder: @listing.Builder</span>
                                 }
 
                                 @if (!string.IsNullOrWhiteSpace(listing.BrokerageCompany))
                                 {
-                                    <span class="badge bg-secondary me-1">Company: @listing.BrokerageCompany</span>
+                                    <span>Company: @listing.BrokerageCompany</span>
                                 }
 
                                 @if (listing.LengthFeet.HasValue)
                                 {
-                                    <span class="badge bg-secondary me-1">@listing.LengthFeet.Value.ToString("0.#") ft</span>
+                                    <span>@listing.LengthFeet.Value.ToString("0.#") ft</span>
                                 }
 
                                 @if (listing.YearBuilt.HasValue)
                                 {
-                                    <span class="badge bg-secondary me-1">Year: @listing.YearBuilt</span>
+                                    <span>Year: @listing.YearBuilt</span>
                                 }
 
                                 @if (listing.Cabins.HasValue)
                                 {
-                                    <span class="badge bg-secondary me-1">Cabins: @listing.Cabins</span>
+                                    <span>Cabins: @listing.Cabins</span>
                                 }
 
                                 @if (listing.Guests.HasValue)
                                 {
-                                    <span class="badge bg-secondary me-1">Guests: @listing.Guests</span>
+                                    <span>Guests: @listing.Guests</span>
                                 }
 
                                 @if (listing.MaxSpeedKnots.HasValue)
                                 {
-                                    <span class="badge bg-secondary me-1">Max: @listing.MaxSpeedKnots.Value.ToString("0.#") kn</span>
+                                    <span>Max: @listing.MaxSpeedKnots.Value.ToString("0.#") kn</span>
                                 }
                             </div>
 
-                            <p class="fw-semibold mb-2">
-                                @(listing.Price > 0 ? listing.Price.ToString("C0") : "Price on request")
-                            </p>
-
-                            <p class="card-text">
+                            <p class="yatco-yacht-description">
                                 @listing.Description
                             </p>
 
-                        <div class="d-flex gap-2 flex-wrap">
-                            <a class="btn btn-primary"
-                               asp-controller="Listings"
-                               asp-action="GenerateCaption"
-                               asp-route-id="@listing.Id">
-                                Generate Generic Scheduled Post
-                            </a>
-                            <form asp-controller="Listings"
-                                asp-action="ReviewAiFacebookPost"
-                                asp-route-id="@listing.Id"
-                                method="post"
-                                class="d-inline">
-                                @Html.AntiForgeryToken()
-                            </form>
+                            <div class="yatco-card-actions">
+                                <a asp-controller="Listings"
+                                   asp-action="GenerateCaption"
+                                   asp-route-id="@listing.Id"
+                                   class="btn yatco-primary-button">
+                                    Generate Generic Scheduled Post
+                                </a>
+                            </div>
                         </div>
-                    </div>
-                </div>
+                    </article>
+                }
             </div>
         }
-    </div>
-}
+    </section>
+</div>

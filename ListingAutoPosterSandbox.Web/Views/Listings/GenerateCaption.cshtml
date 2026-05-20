@@ -3,95 +3,308 @@
 
 @{
     ViewData["Title"] = "Generated Caption";
-    var defaultScheduleTime = DateTime.Now.AddHours(1).ToString("yyyy-MM-ddTHH:mm");
-    var location = string.IsNullOrWhiteSpace(Model.Listing.Location)
-        ? Model.Listing.Address
-        : Model.Listing.Location;
-}
 
-<div class="container mt-4">
-    <h1>Generated Caption</h1>
+    var rawDefaultSchedule = DateTime.Now.AddHours(1);
+    var roundedDefaultSchedule = new DateTime(
+        rawDefaultSchedule.Year,
+        rawDefaultSchedule.Month,
+        rawDefaultSchedule.Day,
+        rawDefaultSchedule.Hour,
+        0,
+        0).AddMinutes(rawDefaultSchedule.Minute <= 30 ? 30 : 60);
 
-    <div class="mb-4">
-        <h4>@Model.Listing.Title</h4>
+    var defaultScheduleDate = roundedDefaultSchedule.ToString("yyyy-MM-dd");
+    var defaultScheduleTime = roundedDefaultSchedule.ToString("HH:mm");
+    var defaultScheduleHiddenValue = roundedDefaultSchedule.ToString("yyyy-MM-ddTHH:mm");
 
-        @if (!string.IsNullOrWhiteSpace(location))
-        {
-            <p class="mb-1">@location</p>
-        }
+    var timeOptions = Enumerable
+        .Range(14, 31) // 7:00 AM through 10:00 PM in 30-minute blocks
+        .Select(index => TimeSpan.FromMinutes(index * 30))
+        .ToList();
+        var location = !string.IsNullOrWhiteSpace(Model.Listing.Location)
+            ? Model.Listing.Location
+            : Model.Listing.Address;
 
-        <p class="fw-semibold mb-2">
-            @(Model.Listing.Price > 0 ? Model.Listing.Price.ToString("C0") : "Price on request")
-        </p>
+        var imageUrl = !string.IsNullOrWhiteSpace(Model.Listing.ImageUrl)
+            ? Model.Listing.ImageUrl
+            : "https://placehold.co/900x500?text=Yacht+Listing";
+    }
 
-        <p>@Model.Listing.Description</p>
+<div class="yatco-page-shell">
+    <div class="yatco-caption-hero">
+        <div>
+            <p class="yatco-eyebrow">AI Social Media Scheduler</p>
+            <h1>Review & Schedule Yacht Post</h1>
+            <p class="yatco-hero-copy">
+                Review the generated yacht caption, select one or more connected platforms,
+                and choose when the post should go live.
+            </p>
+        </div>
     </div>
 
-    <form asp-controller="ScheduledPosts" asp-action="Create" method="post">
-        @Html.AntiForgeryToken()
+    <div class="yatco-schedule-layout">
+        <section class="yatco-listing-preview">
+            <img src="@imageUrl" alt="@Model.Listing.Title" class="yatco-listing-image" />
 
-        <input type="hidden" name="ListingId" value="@Model.Listing.Id" />
+            <div class="yatco-listing-body">
+                <p class="yatco-eyebrow">Selected Yacht</p>
+                <h2>@Model.Listing.Title</h2>
 
-        <div class="mb-3">
-            <label class="form-label" for="Caption">Caption</label>
-            <textarea class="form-control"
-                      id="Caption"
-                      name="Caption"
-                      rows="8"
-                      required>@Model.Caption</textarea>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Social Accounts</label>
-
-            @if (Model.SocialAccounts.Any())
-            {
-                <div class="border rounded p-3">
-                    @foreach (var account in Model.SocialAccounts)
+                <div class="yatco-listing-meta">
+                    @if (!string.IsNullOrWhiteSpace(Model.Listing.Builder))
                     {
-                        <div class="form-check mb-2">
-                            <input class="form-check-input"
-                                type="checkbox"
-                                name="SocialAccountIds"
-                                value="@account.Id"
-                                id="social-account-@account.Id"
-                                checked="@(account.Platform.ToString().Equals("Facebook", StringComparison.OrdinalIgnoreCase))" />
+                        <span>Builder: @Model.Listing.Builder</span>
+                    }
 
-                            <label class="form-check-label" for="social-account-@account.Id">
-                                @account.Platform - @account.DisplayName
-                            </label>
-                        </div>
+                    @if (Model.Listing.LengthFeet.HasValue)
+                    {
+                        <span>Length: @Model.Listing.LengthFeet.Value.ToString("0.#") ft</span>
+                    }
+
+                    @if (Model.Listing.YearBuilt.HasValue)
+                    {
+                        <span>Year: @Model.Listing.YearBuilt</span>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(location))
+                    {
+                        <span>Location: @location</span>
                     }
                 </div>
 
-                <div class="form-text">
-                    Select one or more connected social accounts. Each selected account creates its own scheduled post.
+                <p class="yatco-price">@Model.Listing.Price.ToString("C0")</p>
+
+                <p class="yatco-description">
+                    @Model.Listing.Description
+                </p>
+            </div>
+        </section>
+
+        <section class="yatco-scheduler-panel">
+            <form asp-controller="ScheduledPosts" asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" name="ListingId" value="@Model.Listing.Id" />
+
+                <div class="yatco-panel-header">
+                    <p class="yatco-eyebrow">Generated Caption</p>
+                    <h2>Schedule Post</h2>
+                    <p>
+                        Select every connected account that should receive this caption.
+                        Each selected account will create its own scheduled post.
+                    </p>
                 </div>
-            }
-            else
-            {
-                <div class="alert alert-warning">
-                    No connected social accounts are available. Connect a social account before scheduling a post.
+
+                <div class="yatco-form-group">
+                    <label for="Caption" class="yatco-form-label">Caption</label>
+                    <textarea id="Caption"
+                              name="Caption"
+                              class="form-control yatco-caption-box"
+                              rows="8"
+                              maxlength="2000">@Model.Caption</textarea>
                 </div>
-            }
-        </div>
 
-        <div class="mb-3">
-            <label class="form-label" for="ScheduledLocal">Schedule Time</label>
-            <input class="form-control"
-                   id="ScheduledLocal"
-                   name="ScheduledLocal"
-                   type="datetime-local"
-                   value="@defaultScheduleTime"
-                   required />
-        </div>
+                <div class="yatco-form-group">
+                    <label class="yatco-form-label">Social Accounts</label>
 
-        <button type="submit" class="btn btn-primary" @(Model.SocialAccounts.Any() ? "" : "disabled")>
-            Schedule Post
-        </button>
+                    @if (Model.SocialAccounts is null || !Model.SocialAccounts.Any())
+                    {
+                        <div class="yatco-empty-state">
+                            No connected social accounts were found. Connect an account before scheduling.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="yatco-platform-tabs" role="group" aria-label="Connected social accounts">
+                            @foreach (var account in Model.SocialAccounts)
+                            {
+                                var inputId = $"social-account-{account.Id}";
 
-        <a asp-controller="Listings" asp-action="Index" class="btn btn-secondary">
-            Back to Listings
-        </a>
-    </form>
+                                <label class="yatco-platform-tab" for="@inputId">
+                                <input id="@inputId"
+                                    type="checkbox"
+                                    name="SocialAccountIds"
+                                    value="@account.Id"
+                                    class="yatco-platform-input" />
+
+                                <span class="yatco-platform-tab-content">
+                                    <span class="yatco-platform-check" aria-hidden="true">
+                                        <span class="yatco-platform-checkmark">✓</span>
+                                    </span>
+
+                                    <span class="yatco-platform-copy">
+                                        <span class="yatco-platform-name">@account.Platform</span>
+                                        <span class="yatco-platform-account">@account.DisplayName</span>
+                                        <span class="yatco-platform-state">
+                                            <span class="yatco-state-off">Not selected</span>
+                                            <span class="yatco-state-on">Selected</span>
+                                        </span>
+                                    </span>
+                                </span>
+                            </label>
+                        }
+                        </div>
+
+                        <p class="yatco-helper-text">
+                            Checked tabs will be scheduled together. Facebook can publish now; other platforms remain future integration targets until their platform clients are added.
+                        </p>
+                    }
+                </div>
+
+                <div class="yatco-form-group">
+                    <label class="yatco-form-label">Schedule Time</label>
+
+                    <input id="ScheduledLocal"
+                        name="ScheduledLocal"
+                        type="hidden"
+                        value="@defaultScheduleHiddenValue" />
+
+                    <div class="yatco-schedule-picker">
+                        <div class="yatco-schedule-field">
+                            <span class="yatco-schedule-label">Date</span>
+                            <input id="ScheduleDatePicker"
+                                type="date"
+                                class="form-control yatco-date-input"
+                                value="@defaultScheduleDate" />
+                        </div>
+
+                        <div class="yatco-schedule-field">
+                            <span class="yatco-schedule-label">Time</span>
+                            <select id="ScheduleTimePicker"
+                                    class="form-select yatco-time-select">
+                                @foreach (var timeOption in timeOptions)
+                                {
+                                    var timeValue = timeOption.ToString(@"hh\:mm");
+                                    var timeLabel = DateTime.Today.Add(timeOption).ToString("h:mm tt");
+
+                                    if (timeValue == defaultScheduleTime)
+                                    {
+                                        <option value="@timeValue" selected>@timeLabel</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@timeValue">@timeLabel</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="yatco-schedule-presets" aria-label="Quick schedule options">
+                        <button type="button" class="yatco-preset-button" data-schedule-preset="2h">
+                            In 2 hours
+                        </button>
+                        <button type="button" class="yatco-preset-button" data-schedule-preset="tomorrow-9">
+                            Tomorrow 9:00 AM
+                        </button>
+                        <button type="button" class="yatco-preset-button" data-schedule-preset="tomorrow-12">
+                            Tomorrow 12:00 PM
+                        </button>
+                        <button type="button" class="yatco-preset-button" data-schedule-preset="tomorrow-15">
+                            Tomorrow 3:00 PM
+                        </button>
+                    </div>
+
+                    <p id="SchedulePreview" class="yatco-schedule-preview"></p>
+                </div>
+
+                <div class="yatco-action-row">
+                    <a asp-controller="Listings" asp-action="Index" class="btn yatco-secondary-button">
+                        Back to Listings
+                    </a>
+
+                    <button type="submit" class="btn yatco-primary-button">
+                        Schedule Selected Posts
+                    </button>
+                </div>
+            </form>
+        </section>
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const dateInput = document.getElementById("ScheduleDatePicker");
+            const timeInput = document.getElementById("ScheduleTimePicker");
+            const hiddenInput = document.getElementById("ScheduledLocal");
+            const preview = document.getElementById("SchedulePreview");
+
+            if (!dateInput || !timeInput || !hiddenInput) {
+                return;
+            }
+
+            function pad(value) {
+                return value.toString().padStart(2, "0");
+            }
+
+            function toDateValue(date) {
+                return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+            }
+
+            function toTimeValue(date) {
+                return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+            }
+
+            function updateSchedulePreview() {
+                hiddenInput.value = `${dateInput.value}T${timeInput.value}`;
+
+                const selectedDate = new Date(hiddenInput.value);
+
+                if (!Number.isNaN(selectedDate.getTime()) && preview) {
+                    preview.textContent = `Selected schedule: ${selectedDate.toLocaleString([], {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit"
+                    })}`;
+                }
+            }
+
+            function setSchedule(date) {
+                dateInput.value = toDateValue(date);
+                timeInput.value = toTimeValue(date);
+                updateSchedulePreview();
+            }
+
+            dateInput.addEventListener("change", updateSchedulePreview);
+            timeInput.addEventListener("change", updateSchedulePreview);
+
+            document.querySelectorAll("[data-schedule-preset]").forEach(button => {
+                button.addEventListener("click", () => {
+                    const preset = button.getAttribute("data-schedule-preset");
+                    const selected = new Date();
+
+                    if (preset === "2h") {
+                        selected.setHours(selected.getHours() + 2);
+                        selected.setMinutes(selected.getMinutes() <= 30 ? 30 : 0);
+
+                        if (selected.getMinutes() === 0) {
+                            selected.setHours(selected.getHours() + 1);
+                        }
+                    }
+
+                    if (preset === "tomorrow-9") {
+                        selected.setDate(selected.getDate() + 1);
+                        selected.setHours(9, 0, 0, 0);
+                    }
+
+                    if (preset === "tomorrow-12") {
+                        selected.setDate(selected.getDate() + 1);
+                        selected.setHours(12, 0, 0, 0);
+                    }
+
+                    if (preset === "tomorrow-15") {
+                        selected.setDate(selected.getDate() + 1);
+                        selected.setHours(15, 0, 0, 0);
+                    }
+
+                    setSchedule(selected);
+                });
+            });
+
+            updateSchedulePreview();
+        })();
+    </script>
+}

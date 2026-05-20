@@ -1,124 +1,171 @@
+@using ListingAutoPosterSandbox.Web.Models
 @model List<ListingAutoPosterSandbox.Web.Models.ScheduledPost>
 
 @{
     ViewData["Title"] = "Scheduled Posts";
-
     var easternTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+
+    var scheduledCount = Model.Count(post => post.Status == PostStatus.Scheduled);
+    var postedCount = Model.Count(post => post.Status == PostStatus.Posted);
+    var failedCount = Model.Count(post => post.Status == PostStatus.Failed);
 }
 
-<h1>Scheduled Posts</h1>
+<div class="yatco-page-shell">
+    <section class="yatco-page-header">
+        <div>
+            <p class="yatco-eyebrow">Publishing Queue</p>
+            <h1>Scheduled Posts</h1>
+            <p>
+                Review upcoming posts, manually publish pending posts, and inspect platform results.
+            </p>
+        </div>
 
-@if (!Model.Any())
-{
-    <div class="alert alert-info">
-        No scheduled posts yet.
-    </div>
-}
-else
-{
-    <table class="table table-striped align-middle">
-        <thead>
-            <tr>
-                <th>Listing</th>
-                <th>Platform</th>
-                <th>Social Account</th>
-                <th>Status</th>
-                <th>Scheduled Time</th>
-                <th>Attempts</th>
-                <th>External Post ID</th>
-                <th>Caption</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
+        <a asp-controller="Listings" asp-action="Index" class="btn yatco-secondary-button">
+            Back to Listings
+        </a>
+    </section>
+
+    <section class="yatco-stats-grid">
+        <div class="yatco-stat-card">
+            <span>Scheduled</span>
+            <strong>@scheduledCount</strong>
+        </div>
+
+        <div class="yatco-stat-card">
+            <span>Posted</span>
+            <strong>@postedCount</strong>
+        </div>
+
+        <div class="yatco-stat-card">
+            <span>Failed</span>
+            <strong>@failedCount</strong>
+        </div>
+
+        <div class="yatco-stat-card">
+            <span>Total</span>
+            <strong>@Model.Count</strong>
+        </div>
+    </section>
+
+    @if (!Model.Any())
+    {
+        <section class="yatco-empty-schedule">
+            <p class="yatco-eyebrow">No Posts Yet</p>
+            <h2>No scheduled posts have been created.</h2>
+            <p>
+                Generate a caption from the Listings page, select connected accounts, and schedule the first post.
+            </p>
+
+            <a asp-controller="Listings" asp-action="Index" class="btn yatco-primary-button">
+                Go to Listings
+            </a>
+        </section>
+    }
+    else
+    {
+        <section class="yatco-post-list">
             @foreach (var post in Model)
             {
-                <tr>
-                    <td>@post.Listing.Title</td>
-                    <td>@post.Platform</td>
-                    <td>
-                        @if (post.SocialAccount is not null)
-                        {
-                            <div>@post.SocialAccount.DisplayName</div>
-                            <small class="text-muted">@post.SocialAccount.SecretName</small>
-                        }
-                        else
-                        {
-                            <span class="text-muted">None</span>
-                        }
-                    </td>
-                    <td>@post.Status</td>
-                    <td>
-                        @{
-                            var easternScheduledTime = TimeZoneInfo.ConvertTimeFromUtc(
-                                post.ScheduledUtc,
-                                easternTimeZone);
-                        }
+                var easternScheduledTime = TimeZoneInfo.ConvertTimeFromUtc(post.ScheduledUtc, easternTimeZone);
+                var statusClass = post.Status.ToString().ToLowerInvariant();
 
-                        @easternScheduledTime.ToString("yyyy-MM-dd h:mm tt") Eastern
-                        <br />
-                        <small class="text-muted">
-                            UTC: @post.ScheduledUtc.ToString("yyyy-MM-dd HH:mm")
-                        </small>
-                    </td>
-                    <td>@post.AttemptCount</td>
-                    <td>
-                        @if (!string.IsNullOrWhiteSpace(post.ExternalPostId))
+                <article class="yatco-post-card">
+                    <div class="yatco-post-card-main">
+                        <div class="yatco-post-topline">
+                            <span class="yatco-status-badge yatco-status-@statusClass">
+                                @post.Status
+                            </span>
+
+                            <span class="yatco-post-platform">
+                                @post.Platform
+                            </span>
+                        </div>
+
+                        <h2>@post.Listing.Title</h2>
+
+                        <div class="yatco-post-meta-grid">
+                            <div>
+                                <span>Social Account</span>
+                                <strong>
+                                    @if (post.SocialAccount is not null)
+                                    {
+                                        @post.SocialAccount.DisplayName
+                                    }
+                                    else
+                                    {
+                                        <text>None</text>
+                                    }
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>Scheduled Time</span>
+                                <strong>@easternScheduledTime.ToString("MMM d, yyyy h:mm tt") Eastern</strong>
+                                <small>UTC: @post.ScheduledUtc.ToString("yyyy-MM-dd HH:mm")</small>
+                            </div>
+
+                            <div>
+                                <span>Attempts</span>
+                                <strong>@post.AttemptCount</strong>
+                            </div>
+
+                            <div>
+                                <span>External Post ID</span>
+                                <strong>
+                                    @if (!string.IsNullOrWhiteSpace(post.ExternalPostId))
+                                    {
+                                        @post.ExternalPostId
+                                    }
+                                    else
+                                    {
+                                        <text>None</text>
+                                    }
+                                </strong>
+                            </div>
+                        </div>
+
+                        <p class="yatco-post-caption">
+                            @post.Caption
+                        </p>
+
+                        @if (!string.IsNullOrWhiteSpace(post.LastError))
                         {
-                            <span>@post.ExternalPostId</span>
+                            <div class="yatco-alert yatco-alert-error">
+                                <strong>Last error:</strong> @post.LastError
+                            </div>
                         }
-                        else
-                        {
-                            <span class="text-muted">None</span>
-                        }
-                    </td>
-                    <td style="max-width: 350px;">
-                        @post.Caption
-                    </td>
-                    <td>
-                        <a class="btn btn-sm btn-outline-primary mb-1"
-                           asp-controller="ScheduledPosts"
+                    </div>
+
+                    <div class="yatco-post-actions">
+                        <a asp-controller="ScheduledPosts"
                            asp-action="Details"
-                           asp-route-id="@post.Id">
+                           asp-route-id="@post.Id"
+                           class="btn yatco-secondary-button">
                             Details
                         </a>
 
-                        @if (post.Status != ListingAutoPosterSandbox.Web.Models.PostStatus.Posted)
+                        @if (post.Status != PostStatus.Posted)
                         {
                             <form asp-controller="ScheduledPosts"
                                   asp-action="PublishNow"
+                                  asp-route-id="@post.Id"
                                   method="post">
                                 @Html.AntiForgeryToken()
 
-                                <input type="hidden" name="id" value="@post.Id" />
-
-                                <button type="submit" class="btn btn-sm btn-success">
+                                <button type="submit" class="btn yatco-primary-button">
                                     Publish Now
                                 </button>
                             </form>
                         }
                         else
                         {
-                            <div class="text-muted">Published</div>
+                            <span class="yatco-published-label">
+                                Published
+                            </span>
                         }
-                    </td>
-                </tr>
-
-                @if (!string.IsNullOrWhiteSpace(post.LastError))
-                {
-                    <tr>
-                        <td colspan="9" class="text-danger">
-                            Last error: @post.LastError
-                        </td>
-                    </tr>
-                }
+                    </div>
+                </article>
             }
-        </tbody>
-    </table>
-}
-
-<a class="btn btn-secondary"
-   asp-controller="Listings"
-   asp-action="Index">
-    Back to Listings
-</a>
+        </section>
+    }
+</div>

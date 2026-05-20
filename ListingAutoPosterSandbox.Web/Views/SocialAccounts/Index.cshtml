@@ -2,85 +2,161 @@
 
 @{
     ViewData["Title"] = "Social Accounts";
+
+    var connectedCount = Model.Count(account => account.IsConnected);
+    var disconnectedCount = Model.Count(account => !account.IsConnected);
 }
 
-<div class="d-flex justify-content-between align-items-start mb-3">
-    <div>
-        <h1>Social Accounts</h1>
-        <p class="text-muted mb-0">
-            Connect and review the social accounts this sandbox can publish through.
-        </p>
-    </div>
+<div class="yatco-page-shell">
+    <section class="yatco-social-hero">
+        <div>
+            <p class="yatco-eyebrow">Connection Center</p>
+            <h1>Social Accounts</h1>
+            <p>
+                Connect and review the social accounts used by the scheduling workflow.
+                For the current sandbox, Facebook Page publishing is the active real platform integration.
+            </p>
+        </div>
 
-    <div class="d-flex gap-2">
-        <a asp-controller="FacebookOAuth"
-           asp-action="Connect"
-           class="btn btn-primary">
-            Connect Facebook Page
-        </a>
+        <div class="yatco-social-hero-action">
+            <a asp-controller="FacebookOAuth"
+               asp-action="Connect"
+               class="btn yatco-connect-button yatco-connect-button-large">
+                Connect Facebook Page
+            </a>
 
-        <a asp-controller="Home"
-           asp-action="Index"
-           class="btn btn-outline-secondary">
-            Back to Dashboard
-        </a>
-    </div>
-</div>
+            <p>
+                Starts the Facebook OAuth flow and stores the local sandbox token reference.
+            </p>
+        </div>
+    </section>
 
-@if (TempData["Success"] is string success)
-{
-    <div class="alert alert-success" role="alert">
-        @success
-    </div>
-}
+    @if (TempData["Success"] is string success)
+    {
+        <div class="yatco-alert yatco-alert-success" role="alert">
+            @success
+        </div>
+    }
 
-@if (TempData["Error"] is string error)
-{
-    <div class="alert alert-danger" role="alert">
-        @error
-    </div>
-}
+    @if (TempData["Error"] is string error)
+    {
+        <div class="yatco-alert yatco-alert-error" role="alert">
+            @error
+        </div>
+    }
 
-@if (!Model.Any())
-{
-    <div class="alert alert-info" role="alert">
-        No social accounts are connected yet. Use <strong>Connect Facebook Page</strong> to start the Facebook OAuth flow.
-    </div>
-}
-else
-{
-    <table class="table table-striped align-middle">
-        <thead>
-            <tr>
-                <th>Platform</th>
-                <th>Display Name</th>
-                <th>Platform Account ID</th>
-                <th>Secret Name</th>
-                <th>Connection Status</th>
-                <th>Updated UTC</th>
-            </tr>
-        </thead>
-        <tbody>
+    <section class="yatco-social-summary-grid">
+        <div class="yatco-stat-card">
+            <span>Connected</span>
+            <strong>@connectedCount</strong>
+        </div>
+
+        <div class="yatco-stat-card">
+            <span>Disconnected</span>
+            <strong>@disconnectedCount</strong>
+        </div>
+
+        <div class="yatco-stat-card">
+            <span>Total Accounts</span>
+            <strong>@Model.Count</strong>
+        </div>
+    </section>
+
+    <section class="yatco-social-guide">
+        <div>
+            <p class="yatco-eyebrow">Before Scheduling</p>
+            <h2>Connect Facebook first</h2>
+            <p>
+                A scheduled post needs a connected social account before it can publish.
+                Use the Facebook connection button before generating and scheduling posts from the Listings page.
+            </p>
+        </div>
+
+        <div class="yatco-social-guide-actions">
+            <a asp-controller="FacebookOAuth"
+               asp-action="Connect"
+               class="btn yatco-primary-button">
+                Connect Facebook Page
+            </a>
+
+            <a asp-controller="Listings"
+               asp-action="Index"
+               class="btn yatco-secondary-button">
+                Go to Listings
+            </a>
+        </div>
+    </section>
+
+    @if (!Model.Any())
+    {
+        <section class="yatco-empty-schedule">
+            <p class="yatco-eyebrow">No Accounts Connected</p>
+            <h2>No social accounts are connected yet.</h2>
+            <p>
+                Connect a Facebook Page to give the sandbox a real destination for scheduled Facebook posts.
+            </p>
+
+            <a asp-controller="FacebookOAuth"
+               asp-action="Connect"
+               class="btn yatco-connect-button yatco-connect-button-large">
+                Connect Facebook Page
+            </a>
+        </section>
+    }
+    else
+    {
+        <section class="yatco-social-account-grid">
             @foreach (var account in Model)
             {
-                <tr>
-                    <td>@account.Platform</td>
-                    <td>@account.DisplayName</td>
-                    <td><code>@account.PlatformAccountId</code></td>
-                    <td><code>@account.SecretName</code></td>
-                    <td>
-                        @if (account.IsConnected)
-                        {
-                            <span class="badge bg-success">Connected</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-secondary">Disconnected</span>
-                        }
-                    </td>
-                    <td>@account.UpdatedUtc.ToString("u")</td>
-                </tr>
+                var statusClass = account.IsConnected ? "connected" : "disconnected";
+                var statusText = account.IsConnected ? "Connected" : "Disconnected";
+
+                <article class="yatco-social-account-card">
+                    <div class="yatco-social-account-topline">
+                        <span class="yatco-social-platform">@account.Platform</span>
+                        <span class="yatco-social-status yatco-social-status-@statusClass">
+                            @statusText
+                        </span>
+                    </div>
+
+                    <h2>@account.DisplayName</h2>
+
+                    <div class="yatco-social-account-meta">
+                        <div>
+                            <span>Platform Account ID</span>
+                            <strong>
+                                @if (!string.IsNullOrWhiteSpace(account.PlatformAccountId))
+                                {
+                                    @account.PlatformAccountId
+                                }
+                                else
+                                {
+                                    <text>Not available</text>
+                                }
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Secret Reference</span>
+                            <strong>
+                                @if (!string.IsNullOrWhiteSpace(account.SecretName))
+                                {
+                                    @account.SecretName
+                                }
+                                else
+                                {
+                                    <text>Not available</text>
+                                }
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Updated UTC</span>
+                            <strong>@account.UpdatedUtc.ToString("u")</strong>
+                        </div>
+                    </div>
+                </article>
             }
-        </tbody>
-    </table>
-}
+        </section>
+    }
+</div>

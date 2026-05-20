@@ -29,3 +29,1527 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+/* YATCO-inspired scheduling UI
+   Purpose: make the generic scheduled post flow feel less boxy without changing backend behavior.
+*/
+
+:root {
+    --yatco-navy: #0b223f;
+    --yatco-navy-soft: #12365f;
+    --yatco-blue: #1d6fb8;
+    --yatco-ocean: #0f8da8;
+    --yatco-sky: #eef7fb;
+    --yatco-border: #d9e4ec;
+    --yatco-muted: #66788a;
+    --yatco-white: #ffffff;
+}
+
+.yatco-page-shell {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 2rem 1rem 3rem;
+}
+
+.yatco-caption-hero {
+    margin-bottom: 1.5rem;
+    padding: 2rem;
+    border-radius: 24px;
+    background:
+        linear-gradient(135deg, rgba(11, 34, 63, 0.96), rgba(15, 141, 168, 0.82)),
+        url("https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?auto=format&fit=crop&w=1600&q=80");
+    background-size: cover;
+    background-position: center;
+    color: var(--yatco-white);
+    box-shadow: 0 18px 45px rgba(11, 34, 63, 0.18);
+}
+
+.yatco-caption-hero h1 {
+    margin: 0;
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    font-weight: 600;
+    letter-spacing: -0.04em;
+}
+
+.yatco-hero-copy {
+    max-width: 720px;
+    margin: 0.75rem 0 0;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 1rem;
+}
+
+.yatco-eyebrow {
+    margin: 0 0 0.35rem;
+    color: var(--yatco-ocean);
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.yatco-caption-hero .yatco-eyebrow {
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.yatco-schedule-layout {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.85fr) minmax(360px, 1.15fr);
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.yatco-listing-preview,
+.yatco-scheduler-panel {
+    border: 1px solid var(--yatco-border);
+    border-radius: 24px;
+    background: var(--yatco-white);
+    box-shadow: 0 14px 35px rgba(11, 34, 63, 0.08);
+    overflow: hidden;
+}
+
+.yatco-listing-image {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    display: block;
+}
+
+.yatco-listing-body {
+    padding: 1.4rem;
+}
+
+.yatco-listing-body h2,
+.yatco-panel-header h2 {
+    margin: 0;
+    color: var(--yatco-navy);
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.yatco-listing-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin: 1rem 0;
+}
+
+.yatco-listing-meta span {
+    padding: 0.35rem 0.65rem;
+    border: 1px solid var(--yatco-border);
+    border-radius: 999px;
+    background: var(--yatco-sky);
+    color: var(--yatco-navy-soft);
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.yatco-price {
+    margin: 0.6rem 0;
+    color: var(--yatco-navy);
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.yatco-description {
+    margin: 0.8rem 0 0;
+    color: var(--yatco-muted);
+    line-height: 1.6;
+}
+
+.yatco-scheduler-panel {
+    padding: 1.5rem;
+}
+
+.yatco-panel-header {
+    margin-bottom: 1.25rem;
+}
+
+.yatco-panel-header p:last-child {
+    margin: 0.5rem 0 0;
+    color: var(--yatco-muted);
+}
+
+.yatco-form-group {
+    margin-bottom: 1.35rem;
+}
+
+.yatco-form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--yatco-navy);
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.yatco-caption-box,
+.yatco-date-input {
+    border: 1px solid var(--yatco-border);
+    border-radius: 16px;
+    box-shadow: none;
+}
+
+.yatco-caption-box:focus,
+.yatco-date-input:focus {
+    border-color: var(--yatco-ocean);
+    box-shadow: 0 0 0 0.2rem rgba(15, 141, 168, 0.16);
+}
+
+.yatco-platform-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    align-items: flex-end;
+    padding: 0.35rem 0.35rem 0;
+    border-bottom: 1px solid var(--yatco-border);
+}
+
+.yatco-platform-tab {
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+}
+
+.yatco-platform-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.yatco-platform-tab-content {
+    display: block;
+    min-width: 145px;
+    padding: 0.85rem 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-bottom: none;
+    border-radius: 16px 16px 0 0;
+    background: linear-gradient(135deg, var(--yatco-navy-soft), var(--yatco-blue));
+    color: var(--yatco-white);
+    box-shadow: 0 8px 18px rgba(11, 34, 63, 0.12);
+    transition: transform 160ms ease, background 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.yatco-platform-tab-content:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, var(--yatco-navy), var(--yatco-ocean));
+}
+
+.yatco-platform-input:checked + .yatco-platform-tab-content {
+    transform: translateY(-4px);
+    border-color: var(--yatco-border);
+    background: var(--yatco-white);
+    color: var(--yatco-navy);
+    box-shadow: 0 12px 24px rgba(11, 34, 63, 0.1);
+}
+
+.yatco-platform-input:focus + .yatco-platform-tab-content {
+    outline: 3px solid rgba(15, 141, 168, 0.24);
+    outline-offset: 2px;
+}
+
+.yatco-platform-name {
+    display: block;
+    font-size: 0.92rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+.yatco-platform-account {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.76rem;
+    font-weight: 500;
+    opacity: 0.76;
+}
+
+.yatco-helper-text {
+    margin: 0.65rem 0 0;
+    color: var(--yatco-muted);
+    font-size: 0.86rem;
+}
+
+.yatco-empty-state {
+    padding: 1rem;
+    border: 1px dashed var(--yatco-border);
+    border-radius: 16px;
+    background: var(--yatco-sky);
+    color: var(--yatco-muted);
+}
+
+.yatco-action-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.yatco-primary-button,
+.yatco-secondary-button {
+    border-radius: 999px;
+    padding: 0.7rem 1.25rem;
+    font-weight: 700;
+}
+
+.yatco-primary-button {
+    border: 1px solid var(--yatco-blue);
+    background: linear-gradient(135deg, var(--yatco-blue), var(--yatco-ocean));
+    color: var(--yatco-white);
+}
+
+.yatco-primary-button:hover {
+    border-color: var(--yatco-navy);
+    background: linear-gradient(135deg, var(--yatco-navy-soft), var(--yatco-blue));
+    color: var(--yatco-white);
+}
+
+.yatco-secondary-button {
+    border: 1px solid var(--yatco-border);
+    background: var(--yatco-white);
+    color: var(--yatco-navy);
+}
+
+.yatco-secondary-button:hover {
+    border-color: var(--yatco-ocean);
+    background: var(--yatco-sky);
+    color: var(--yatco-navy);
+}
+
+@media (max-width: 900px) {
+    .yatco-schedule-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .yatco-platform-tab-content {
+        min-width: 130px;
+    }
+
+    .yatco-action-row {
+        flex-direction: column-reverse;
+    }
+
+    .yatco-action-row .btn {
+        width: 100%;
+    }
+}
+
+
+
+
+
+
+/* UI-2: clearer selected platform tabs and improved schedule picker */
+
+.yatco-platform-tabs {
+    align-items: stretch;
+    gap: 0.7rem;
+    padding: 0.3rem 0 0.9rem;
+    border-bottom: 0;
+}
+
+.yatco-platform-tab-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 180px;
+    height: 100%;
+    padding: 0.9rem 1rem;
+    border: 2px solid var(--yatco-border);
+    border-radius: 18px;
+    background: var(--yatco-white);
+    color: var(--yatco-navy);
+    box-shadow: 0 8px 20px rgba(11, 34, 63, 0.06);
+    transition:
+        transform 160ms ease,
+        background 160ms ease,
+        color 160ms ease,
+        border-color 160ms ease,
+        box-shadow 160ms ease;
+}
+
+.yatco-platform-tab-content:hover {
+    transform: translateY(-2px);
+    border-color: rgba(15, 141, 168, 0.55);
+    background: var(--yatco-sky);
+    color: var(--yatco-navy);
+}
+
+.yatco-platform-input:checked + .yatco-platform-tab-content {
+    transform: translateY(-2px);
+    border-color: var(--yatco-ocean);
+    background: linear-gradient(135deg, var(--yatco-navy-soft), var(--yatco-ocean));
+    color: var(--yatco-white);
+    box-shadow: 0 14px 30px rgba(11, 34, 63, 0.18);
+}
+
+.yatco-platform-check {
+    display: grid;
+    place-items: center;
+    flex: 0 0 30px;
+    width: 30px;
+    height: 30px;
+    border: 2px solid var(--yatco-border);
+    border-radius: 999px;
+    background: var(--yatco-white);
+}
+
+.yatco-platform-checkmark {
+    opacity: 0;
+    color: var(--yatco-navy);
+    font-size: 1rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.yatco-platform-input:checked + .yatco-platform-tab-content .yatco-platform-check {
+    border-color: var(--yatco-white);
+    background: var(--yatco-white);
+}
+
+.yatco-platform-input:checked + .yatco-platform-tab-content .yatco-platform-checkmark {
+    opacity: 1;
+}
+
+.yatco-platform-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.yatco-platform-name {
+    font-size: 0.95rem;
+}
+
+.yatco-platform-account {
+    margin-top: 0;
+    font-size: 0.78rem;
+}
+
+.yatco-platform-state {
+    margin-top: 0.25rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.yatco-state-on {
+    display: none;
+}
+
+.yatco-state-off {
+    display: inline;
+    color: var(--yatco-muted);
+}
+
+.yatco-platform-input:checked + .yatco-platform-tab-content .yatco-state-on {
+    display: inline;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.yatco-platform-input:checked + .yatco-platform-tab-content .yatco-state-off {
+    display: none;
+}
+
+.yatco-platform-input:focus + .yatco-platform-tab-content {
+    outline: 3px solid rgba(15, 141, 168, 0.24);
+    outline-offset: 2px;
+}
+
+.yatco-schedule-picker {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) minmax(160px, 0.8fr);
+    gap: 0.85rem;
+}
+
+.yatco-schedule-field {
+    padding: 0.9rem;
+    border: 1px solid var(--yatco-border);
+    border-radius: 18px;
+    background: var(--yatco-sky);
+}
+
+.yatco-schedule-label {
+    display: block;
+    margin-bottom: 0.45rem;
+    color: var(--yatco-navy);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.yatco-time-select,
+.yatco-date-input {
+    min-height: 44px;
+    border: 1px solid var(--yatco-border);
+    border-radius: 14px;
+    background-color: var(--yatco-white);
+}
+
+.yatco-time-select:focus,
+.yatco-date-input:focus {
+    border-color: var(--yatco-ocean);
+    box-shadow: 0 0 0 0.2rem rgba(15, 141, 168, 0.16);
+}
+
+.yatco-schedule-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.8rem;
+}
+
+.yatco-preset-button {
+    border: 1px solid var(--yatco-border);
+    border-radius: 999px;
+    background: var(--yatco-white);
+    color: var(--yatco-navy-soft);
+    padding: 0.45rem 0.8rem;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.yatco-preset-button:hover {
+    border-color: var(--yatco-ocean);
+    background: var(--yatco-sky);
+    color: var(--yatco-navy);
+}
+
+.yatco-schedule-preview {
+    margin: 0.75rem 0 0;
+    padding: 0.75rem 0.9rem;
+    border-left: 4px solid var(--yatco-ocean);
+    border-radius: 12px;
+    background: rgba(15, 141, 168, 0.08);
+    color: var(--yatco-navy);
+    font-weight: 700;
+}
+
+@media (max-width: 700px) {
+    .yatco-schedule-picker {
+        grid-template-columns: 1fr;
+    }
+
+    .yatco-platform-tab {
+        width: 100%;
+    }
+
+    .yatco-platform-tab-content {
+        min-width: 100%;
+    }
+}
+
+/* UI-3: Home, Listings, and Scheduled Posts quality-of-life polish */
+
+.yatco-dashboard-hero {
+    min-height: 360px;
+    display: flex;
+    align-items: center;
+    padding: 2.5rem;
+    border-radius: 28px;
+    background:
+        linear-gradient(135deg, rgba(11, 34, 63, 0.94), rgba(15, 141, 168, 0.72)),
+        url("https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?auto=format&fit=crop&w=1800&q=80");
+    background-size: cover;
+    background-position: center;
+    color: var(--yatco-white);
+    box-shadow: 0 18px 45px rgba(11, 34, 63, 0.18);
+}
+
+.yatco-dashboard-hero-content {
+    max-width: 760px;
+}
+
+.yatco-dashboard-hero h1,
+.yatco-page-header h1 {
+    margin: 0;
+    font-size: clamp(2.2rem, 5vw, 4rem);
+    font-weight: 650;
+    letter-spacing: -0.045em;
+}
+
+.yatco-dashboard-hero p {
+    max-width: 720px;
+    margin: 0.85rem 0 0;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 1.05rem;
+    line-height: 1.65;
+}
+
+.yatco-dashboard-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.yatco-dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 1.25rem;
+}
+
+.yatco-dashboard-card {
+    display: block;
+    min-height: 190px;
+    padding: 1.35rem;
+    border: 1px solid var(--yatco-border);
+    border-radius: 22px;
+    background: var(--yatco-white);
+    color: inherit;
+    text-decoration: none;
+    box-shadow: 0 12px 30px rgba(11, 34, 63, 0.07);
+    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.yatco-dashboard-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(15, 141, 168, 0.45);
+    color: inherit;
+    box-shadow: 0 18px 40px rgba(11, 34, 63, 0.12);
+}
+
+.yatco-card-kicker {
+    display: inline-flex;
+    margin-bottom: 0.85rem;
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+    background: var(--yatco-sky);
+    color: var(--yatco-ocean);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.yatco-dashboard-card h2 {
+    margin: 0;
+    color: var(--yatco-navy);
+    font-size: 1.25rem;
+    font-weight: 750;
+}
+
+.yatco-dashboard-card p {
+    margin: 0.65rem 0 0;
+    color: var(--yatco-muted);
+    line-height: 1.6;
+}
+
+.yatco-process-strip {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+}
+
+.yatco-process-strip div {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.9rem;
+    border: 1px solid var(--yatco-border);
+    border-radius: 18px;
+    background: var(--yatco-sky);
+}
+
+.yatco-process-strip span {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--yatco-blue), var(--yatco-ocean));
+    color: var(--yatco-white);
+    font-weight: 800;
+}
+
+.yatco-process-strip strong {
+    color: var(--yatco-navy);
+    font-size: 0.92rem;
+}
+
+.yatco-page-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    align-items: flex-end;
+    margin-bottom: 1.5rem;
+    padding: 2rem;
+    border: 1px solid var(--yatco-border);
+    border-radius: 26px;
+    background:
+        linear-gradient(135deg, rgba(238, 247, 251, 0.95), rgba(255, 255, 255, 0.98));
+    box-shadow: 0 12px 30px rgba(11, 34, 63, 0.06);
+}
+
+.yatco-page-header p {
+    max-width: 760px;
+    margin: 0.65rem 0 0;
+    color: var(--yatco-muted);
+    line-height: 1.6;
+}
+
+.yatco-alert {
+    margin-bottom: 1rem;
+    padding: 0.9rem 1rem;
+    border-radius: 16px;
+    font-weight: 650;
+}
+
+.yatco-alert-success {
+    border: 1px solid rgba(15, 141, 168, 0.25);
+    background: rgba(15, 141, 168, 0.1);
+    color: var(--yatco-navy);
+}
+
+.yatco-alert-error {
+    border: 1px solid rgba(170, 50, 50, 0.2);
+    background: rgba(170, 50, 50, 0.08);
+    color: #7f1d1d;
+}
+
+.yatco-custom-card,
+.yatco-listing-section,
+.yatco-empty-schedule {
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    border: 1px solid var(--yatco-border);
+    border-radius: 26px;
+    background: var(--yatco-white);
+    box-shadow: 0 14px 35px rgba(11, 34, 63, 0.07);
+}
+
+.yatco-custom-card-header {
+    margin-bottom: 1.25rem;
+}
+
+.yatco-custom-card-header h2,
+.yatco-section-heading h2,
+.yatco-empty-schedule h2 {
+    margin: 0;
+    color: var(--yatco-navy);
+    font-size: 1.55rem;
+    font-weight: 750;
+    letter-spacing: -0.025em;
+}
+
+.yatco-custom-card-header p,
+.yatco-empty-schedule p {
+    margin: 0.55rem 0 0;
+    color: var(--yatco-muted);
+    line-height: 1.6;
+}
+
+.yatco-custom-form {
+    margin-top: 1rem;
+}
+
+.yatco-custom-fields {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.yatco-form-group-wide {
+    grid-column: 1 / -1;
+}
+
+.yatco-input {
+    min-height: 44px;
+    border: 1px solid var(--yatco-border);
+    border-radius: 14px;
+    box-shadow: none;
+}
+
+.yatco-input:focus {
+    border-color: var(--yatco-ocean);
+    box-shadow: 0 0 0 0.2rem rgba(15, 141, 168, 0.16);
+}
+
+.yatco-input-with-unit {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--yatco-border);
+    border-radius: 14px;
+    background: var(--yatco-white);
+    overflow: hidden;
+}
+
+.yatco-input-with-unit input {
+    border: 0;
+    border-radius: 0;
+}
+
+.yatco-input-with-unit span {
+    padding: 0 0.8rem;
+    color: var(--yatco-muted);
+    font-weight: 700;
+}
+
+.yatco-listing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.1rem;
+}
+
+.yatco-yacht-card {
+    overflow: hidden;
+    border: 1px solid var(--yatco-border);
+    border-radius: 24px;
+    background: var(--yatco-white);
+    box-shadow: 0 10px 26px rgba(11, 34, 63, 0.07);
+    transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.yatco-yacht-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 40px rgba(11, 34, 63, 0.12);
+}
+
+.yatco-yacht-image-wrap {
+    position: relative;
+}
+
+.yatco-yacht-image {
+    display: block;
+    width: 100%;
+    height: 230px;
+    object-fit: cover;
+}
+
+.yatco-yacht-price {
+    position: absolute;
+    right: 0.85rem;
+    bottom: 0.85rem;
+    padding: 0.45rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(11, 34, 63, 0.9);
+    color: var(--yatco-white);
+    font-weight: 800;
+    font-size: 0.86rem;
+}
+
+.yatco-yacht-body {
+    padding: 1.15rem;
+}
+
+.yatco-yacht-body h3 {
+    margin: 0;
+    color: var(--yatco-navy);
+    font-size: 1.25rem;
+    font-weight: 800;
+}
+
+.yatco-yacht-location {
+    margin: 0.45rem 0 0;
+    color: var(--yatco-muted);
+    font-weight: 650;
+}
+
+.yatco-yacht-specs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0.9rem 0;
+}
+
+.yatco-yacht-specs span {
+    padding: 0.32rem 0.58rem;
+    border: 1px solid var(--yatco-border);
+    border-radius: 999px;
+    background: var(--yatco-sky);
+    color: var(--yatco-navy-soft);
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.yatco-yacht-description {
+    display: -webkit-box;
+    min-height: 4.7rem;
+    margin: 0;
+    overflow: hidden;
+    color: var(--yatco-muted);
+    line-height: 1.55;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+.yatco-card-actions {
+    margin-top: 1rem;
+}
+
+.yatco-card-actions .btn {
+    width: 100%;
+}
+
+.yatco-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.yatco-stat-card {
+    padding: 1rem;
+    border: 1px solid var(--yatco-border);
+    border-radius: 20px;
+    background: var(--yatco-white);
+    box-shadow: 0 10px 26px rgba(11, 34, 63, 0.06);
+}
+
+.yatco-stat-card span {
+    display: block;
+    color: var(--yatco-muted);
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.yatco-stat-card strong {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--yatco-navy);
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.yatco-empty-schedule {
+    text-align: center;
+}
+
+.yatco-empty-schedule .btn {
+    margin-top: 1rem;
+}
+
+.yatco-post-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.yatco-post-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1.25rem;
+    padding: 1.25rem;
+    border: 1px solid var(--yatco-border);
+    border-radius: 24px;
+    background: var(--yatco-white);
+    box-shadow: 0 10px 26px rgba(11, 34, 63, 0.07);
+}
+
+.yatco-post-topline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    align-items: center;
+    margin-bottom: 0.65rem;
+}
+
+.yatco-post-card h2 {
+    margin: 0;
+    color: var(--yatco-navy);
+    font-size: 1.35rem;
+    font-weight: 800;
+}
+
+.yatco-post-platform {
+    padding: 0.28rem 0.6rem;
+    border-radius: 999px;
+    background: var(--yatco-sky);
+    color: var(--yatco-navy-soft);
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.yatco-status-badge {
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 850;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.yatco-status-scheduled {
+    background: rgba(29, 111, 184, 0.12);
+    color: var(--yatco-blue);
+}
+
+.yatco-status-processing {
+    background: rgba(167, 124, 28, 0.12);
+    color: #7c5b13;
+}
+
+.yatco-status-posted {
+    background: rgba(15, 141, 168, 0.12);
+    color: var(--yatco-ocean);
+}
+
+.yatco-status-failed {
+    background: rgba(170, 50, 50, 0.1);
+    color: #7f1d1d;
+}
+
+.yatco-status-draft {
+    background: rgba(102, 120, 138, 0.12);
+    color: var(--yatco-muted);
+}
+
+.yatco-post-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin: 1rem 0;
+}
+
+.yatco-post-meta-grid div {
+    padding: 0.75rem;
+    border: 1px solid var(--yatco-border);
+    border-radius: 16px;
+    background: var(--yatco-sky);
+}
+
+.yatco-post-meta-grid span {
+    display: block;
+    color: var(--yatco-muted);
+    font-size: 0.72rem;
+    font-weight: 850;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.yatco-post-meta-grid strong {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--yatco-navy);
+    font-size: 0.9rem;
+    word-break: break-word;
+}
+
+.yatco-post-meta-grid small {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--yatco-muted);
+}
+
+.yatco-post-caption {
+    margin: 0;
+    color: var(--yatco-muted);
+    line-height: 1.65;
+}
+
+.yatco-post-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    align-items: stretch;
+    justify-content: flex-start;
+    min-width: 155px;
+}
+
+.yatco-post-actions form {
+    margin: 0;
+}
+
+.yatco-post-actions .btn {
+    width: 100%;
+}
+
+.yatco-published-label {
+    display: inline-flex;
+    justify-content: center;
+    padding: 0.65rem 1rem;
+    border-radius: 999px;
+    background: rgba(15, 141, 168, 0.1);
+    color: var(--yatco-ocean);
+    font-weight: 800;
+}
+
+@media (max-width: 1100px) {
+    .yatco-dashboard-grid,
+    .yatco-listing-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .yatco-custom-fields,
+    .yatco-post-meta-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .yatco-process-strip {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    .yatco-dashboard-hero,
+    .yatco-page-header,
+    .yatco-custom-card,
+    .yatco-listing-section {
+        padding: 1.25rem;
+    }
+
+    .yatco-page-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .yatco-dashboard-grid,
+    .yatco-listing-grid,
+    .yatco-stats-grid,
+    .yatco-custom-fields,
+    .yatco-post-meta-grid,
+    .yatco-process-strip {
+        grid-template-columns: 1fr;
+    }
+
+    .yatco-post-card {
+        grid-template-columns: 1fr;
+    }
+
+    .yatco-post-actions {
+        min-width: 0;
+    }
+}
+
+/* UI-4: application shell, navigation, and Social Accounts polish */
+
+.yatco-app-body {
+    background:
+        radial-gradient(circle at top left, rgba(15, 141, 168, 0.08), transparent 32rem),
+        linear-gradient(180deg, #f6fbfd 0%, #ffffff 42%);
+    color: var(--yatco-navy);
+}
+
+.yatco-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    padding: 0.75rem 1rem;
+    background: rgba(246, 251, 253, 0.86);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(217, 228, 236, 0.8);
+}
+
+.yatco-shell-nav {
+    max-width: 1220px;
+    margin: 0 auto;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid rgba(217, 228, 236, 0.9);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 12px 30px rgba(11, 34, 63, 0.08);
+}
+
+.yatco-shell-container {
+    max-width: 1220px;
+    margin: 0 auto;
+}
+
+.yatco-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    color: var(--yatco-navy);
+    text-decoration: none;
+}
+
+.yatco-brand:hover {
+    color: var(--yatco-navy);
+}
+
+.yatco-brand-mark {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--yatco-navy), var(--yatco-ocean));
+    color: var(--yatco-white);
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+}
+
+.yatco-brand-copy {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.05;
+}
+
+.yatco-brand-copy strong {
+    font-size: 1rem;
+    letter-spacing: -0.02em;
+}
+
+.yatco-brand-copy small {
+    margin-top: 0.2rem;
+    color: var(--yatco-muted);
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.yatco-main-nav {
+    gap: 0.3rem;
+    margin-left: 1.2rem;
+}
+
+.yatco-nav-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 42px;
+    padding: 0.55rem 0.85rem;
+    border-radius: 999px;
+    color: var(--yatco-muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 750;
+    transition: background 160ms ease, color 160ms ease;
+}
+
+.yatco-nav-link:hover {
+    background: var(--yatco-sky);
+    color: var(--yatco-navy);
+}
+
+.yatco-nav-link.is-active {
+    background: linear-gradient(135deg, rgba(29, 111, 184, 0.12), rgba(15, 141, 168, 0.14));
+    color: var(--yatco-navy);
+}
+
+.yatco-nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.yatco-connect-button {
+    border: 1px solid var(--yatco-ocean);
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--yatco-ocean), var(--yatco-blue));
+    color: var(--yatco-white);
+    font-weight: 800;
+    box-shadow: 0 10px 24px rgba(15, 141, 168, 0.18);
+}
+
+.yatco-connect-button:hover {
+    border-color: var(--yatco-navy);
+    background: linear-gradient(135deg, var(--yatco-navy-soft), var(--yatco-ocean));
+    color: var(--yatco-white);
+}
+
+.yatco-connect-button-large {
+    padding: 0.75rem 1.25rem;
+}
+
+.yatco-nav-toggle {
+    border: 1px solid var(--yatco-border);
+    border-radius: 999px;
+}
+
+.yatco-main-content {
+    min-height: calc(100vh - 150px);
+}
+
+.yatco-footer {
+    margin-top: 2rem;
+    padding: 1.25rem 1rem;
+    border-top: 1px solid var(--yatco-border);
+    color: var(--yatco-muted);
+    font-size: 0.9rem;
+}
+
+.yatco-footer .yatco-shell-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.yatco-footer a {
+    color: var(--yatco-navy-soft);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.yatco-dashboard-card-featured {
+    border-color: rgba(15, 141, 168, 0.35);
+    background:
+        linear-gradient(180deg, rgba(238, 247, 251, 0.9), rgba(255, 255, 255, 1));
+}
+
+.yatco-workflow-strip {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+}
+
+.yatco-workflow-strip div {
+    padding: 1rem;
+    border: 1px solid var(--yatco-border);
+    border-radius: 18px;
+    background: var(--yatco-white);
+    box-shadow: 0 10px 24px rgba(11, 34, 63, 0.05);
+}
+
+.yatco-workflow-strip span {
+    display: inline-flex;
+    margin-bottom: 0.55rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    background: var(--yatco-sky);
+    color: var(--yatco-ocean);
+    font-size: 0.72rem;
+    font-weight: 900;
+}
+
+.yatco-workflow-strip strong {
+    display: block;
+    color: var(--yatco-navy);
+    font-size: 0.96rem;
+}
+
+.yatco-workflow-strip small {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--yatco-muted);
+    line-height: 1.45;
+}
+
+.yatco-social-hero {
+    display: grid;
+    grid-template-columns: 1fr minmax(260px, 360px);
+    gap: 1.25rem;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    padding: 2rem;
+    border-radius: 28px;
+    background:
+        linear-gradient(135deg, rgba(11, 34, 63, 0.95), rgba(15, 141, 168, 0.78)),
+        url("https://images.unsplash.com/photo-1605281317010-fe5ffe798166?auto=format&fit=crop&w=1800&q=80");
+    background-size: cover;
+    background-position: center;
+    color: var(--yatco-white);
+    box-shadow: 0 18px 45px rgba(11, 34, 63, 0.18);
+}
+
+.yatco-social-hero h1 {
+    margin: 0;
+    font-size: clamp(2.2rem, 5vw, 4rem);
+    font-weight: 650;
+    letter-spacing: -0.045em;
+}
+
+.yatco-social-hero p {
+    max-width: 760px;
+    margin: 0.75rem 0 0;
+    color: rgba(255, 255, 255, 0.88);
+    line-height: 1.65;
+}
+
+.yatco-social-hero .yatco-eyebrow {
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.yatco-social-hero-action {
+    padding: 1.15rem;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.yatco-social-hero-action .btn {
+    width: 100%;
+}
+
+.yatco-social-hero-action p {
+    margin-top: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.yatco-social-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.yatco-social-guide {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    padding: 1.25rem;
+    border: 1px solid rgba(15, 141, 168, 0.25);
+    border-radius: 22px;
+    background: linear-gradient(135deg, rgba(238, 247, 251, 0.95), rgba(255, 255, 255, 1));
+    box-shadow: 0 12px 30px rgba(11, 34, 63, 0.06);
+}
+
+.yatco-social-guide h2 {
+    margin: 0;
+    color: var(--yatco-navy);
+    font-size: 1.45rem;
+    font-weight: 800;
+}
+
+.yatco-social-guide p {
+    max-width: 760px;
+    margin: 0.5rem 0 0;
+    color: var(--yatco-muted);
+    line-height: 1.6;
+}
+
+.yatco-social-guide-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    justify-content: flex-end;
+}
+
+.yatco-social-account-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.yatco-social-account-card {
+    padding: 1.2rem;
+    border: 1px solid var(--yatco-border);
+    border-radius: 24px;
+    background: var(--yatco-white);
+    box-shadow: 0 10px 26px rgba(11, 34, 63, 0.07);
+}
+
+.yatco-social-account-topline {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.yatco-social-platform,
+.yatco-social-status {
+    display: inline-flex;
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 850;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.yatco-social-platform {
+    background: var(--yatco-sky);
+    color: var(--yatco-navy-soft);
+}
+
+.yatco-social-status-connected {
+    background: rgba(15, 141, 168, 0.12);
+    color: var(--yatco-ocean);
+}
+
+.yatco-social-status-disconnected {
+    background: rgba(170, 50, 50, 0.1);
+    color: #7f1d1d;
+}
+
+.yatco-social-account-card h2 {
+    margin: 0;
+    color: var(--yatco-navy);
+    font-size: 1.35rem;
+    font-weight: 800;
+}
+
+.yatco-social-account-meta {
+    display: grid;
+    gap: 0.7rem;
+    margin-top: 1rem;
+}
+
+.yatco-social-account-meta div {
+    padding: 0.75rem;
+    border: 1px solid var(--yatco-border);
+    border-radius: 16px;
+    background: var(--yatco-sky);
+}
+
+.yatco-social-account-meta span {
+    display: block;
+    color: var(--yatco-muted);
+    font-size: 0.72rem;
+    font-weight: 850;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.yatco-social-account-meta strong {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--yatco-navy);
+    font-size: 0.9rem;
+    word-break: break-word;
+}
+
+@media (max-width: 1050px) {
+    .yatco-shell-nav {
+        border-radius: 24px;
+    }
+
+    .yatco-main-nav {
+        margin: 1rem 0 0;
+    }
+
+    .yatco-nav-actions {
+        margin-top: 0.85rem;
+    }
+
+    .yatco-nav-actions .btn {
+        width: 100%;
+    }
+
+    .yatco-social-hero,
+    .yatco-social-account-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .yatco-social-guide {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .yatco-social-guide-actions {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 760px) {
+    .yatco-topbar {
+        padding: 0.5rem;
+    }
+
+    .yatco-brand-copy strong {
+        font-size: 0.92rem;
+    }
+
+    .yatco-brand-copy small {
+        font-size: 0.68rem;
+    }
+
+    .yatco-social-summary-grid,
+    .yatco-workflow-strip {
+        grid-template-columns: 1fr;
+    }
+
+    .yatco-footer .yatco-shell-container {
+        flex-direction: column;
+    }
+}

@@ -1,13 +1,97 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Dashboard";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Click the button below to view your connected social accounts.</p>
-        <a asp-controller="SocialAccounts"
-        asp-action="Index"
-        class="btn btn-primary">
-            Social Accounts
-    </a>        
+<div class="yatco-page-shell">
+    <section class="yatco-dashboard-hero">
+        <div class="yatco-dashboard-hero-content">
+            <p class="yatco-eyebrow">Listing Auto Poster Sandbox</p>
+            <h1>Yacht Social Media Scheduler</h1>
+            <p>
+                Connect a Facebook Page, generate yacht-focused AI captions, schedule posts,
+                and track publishing results from one sandbox workflow.
+            </p>
+
+            <div class="yatco-dashboard-actions">
+                <a asp-controller="SocialAccounts" asp-action="Index" class="btn yatco-connect-button yatco-connect-button-large">
+                    Connect Social Accounts
+                </a>
+
+                <a asp-controller="Listings" asp-action="Index" class="btn yatco-primary-button">
+                    Start from Listings
+                </a>
+
+                <a asp-controller="ScheduledPosts" asp-action="Index" class="btn yatco-secondary-button">
+                    View Scheduled Posts
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="yatco-dashboard-grid">
+        <a asp-controller="SocialAccounts" asp-action="Index" class="yatco-dashboard-card yatco-dashboard-card-featured">
+            <span class="yatco-card-kicker">Connection Center</span>
+            <h2>Social Accounts</h2>
+            <p>
+                Connect or review the Facebook Page account used by the publishing workflow.
+                Start here before scheduling posts.
+            </p>
+        </a>
+
+        <a asp-controller="Listings" asp-action="Index" class="yatco-dashboard-card">
+            <span class="yatco-card-kicker">Inventory</span>
+            <h2>Yacht Listings</h2>
+            <p>
+                Select a sample yacht or enter custom yacht information for AI caption generation.
+            </p>
+        </a>
+
+        <a asp-controller="ScheduledPosts" asp-action="Index" class="yatco-dashboard-card">
+            <span class="yatco-card-kicker">Publishing Queue</span>
+            <h2>Scheduled Posts</h2>
+            <p>
+                Monitor upcoming posts, manual publishing actions, attempts, errors, and external post IDs.
+            </p>
+        </a>
+
+        <a href="/hangfire" class="yatco-dashboard-card">
+            <span class="yatco-card-kicker">Developer Tools</span>
+            <h2>Hangfire Dashboard</h2>
+            <p>
+                Inspect the local background job runner used to scan and publish due posts.
+            </p>
+        </a>
+    </section>
+
+    <section class="yatco-workflow-strip">
+        <div>
+            <span>01</span>
+            <strong>Connect accounts</strong>
+            <small>Facebook OAuth starts here.</small>
+        </div>
+
+        <div>
+            <span>02</span>
+            <strong>Select yacht</strong>
+            <small>Use a sample or custom listing.</small>
+        </div>
+
+        <div>
+            <span>03</span>
+            <strong>Generate caption</strong>
+            <small>AI drafts yacht-focused copy.</small>
+        </div>
+
+        <div>
+            <span>04</span>
+            <strong>Schedule posts</strong>
+            <small>Choose accounts and timing.</small>
+        </div>
+
+        <div>
+            <span>05</span>
+            <strong>Track results</strong>
+            <small>Review attempts and platform IDs.</small>
+        </div>
+    </section>
 </div>
