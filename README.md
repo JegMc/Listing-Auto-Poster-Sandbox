@@ -7,73 +7,134 @@
 ![Meta Graph API](https://img.shields.io/badge/Meta%20Graph%20API-Facebook%20Pages-0866FF?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Sandbox%20POC-orange?style=for-the-badge)
 
-A learning sandbox for building an AI-assisted social media auto-poster with ASP.NET Core MVC, Entity Framework Core, SQL Server LocalDB, Hangfire, OpenAI caption generation, and Facebook Page publishing through the Meta Graph API.
+A learning sandbox for building an AI-assisted yacht listing social media auto-poster with ASP.NET Core MVC, Entity Framework Core, SQL Server LocalDB, Hangfire, OpenAI caption generation, scheduled post records, and Facebook Page text publishing through the Meta Graph API.
 
-This project started as a fake social-posting pipeline. It now includes a working Facebook proof of concept:
-
-- connect or represent a Facebook Page as a `SocialAccount`
-- pick a sample listing
-- generate an AI-written Facebook caption
-- review and edit the caption before publishing
-- create a durable `ScheduledPost` database row
-- publish through the same scheduled-post pipeline used by the app
-- send the final text to a real Facebook Page through the Meta Graph API
-- save Meta's returned post ID and publish attempt details
-
-This is still a sandbox, not a production-ready social media product. The purpose is to prove the architecture and learn the implementation path one phase at a time.
+This project is not a production-ready YATCO BOSS module. It is a focused sandbox used to learn and prove the implementation path one phase at a time.
 
 ---
 
-## Current Project Status
+## Current Purpose
 
-### Working now
+The goal of this project is to model the core workflow behind a YATCO BOSS-style Social Media Auto-Poster:
 
-- ASP.NET Core MVC dashboard
-- sample listing cards
-- OpenAI caption generation
-- review/edit page before Facebook publishing
-- `ScheduledPosts` database pipeline
-- `PostAttempts` publish logging
-- real Facebook Page text posting through the Meta Graph API
-- `SocialAccount.PlatformAccountId` used as the Facebook Page ID
-- local Facebook OAuth/token-store experiment
-- Hangfire dashboard and recurring due-post scan flow
-- details page showing post status, attempts, response JSON, and external post ID
+1. A user selects a yacht listing.
+2. The app generates a yacht-broker-style AI caption.
+3. The user reviews the generated caption.
+4. The user selects one or more connected social accounts with checkboxes.
+5. The user chooses a scheduled date/time.
+6. The app creates one `ScheduledPost` row per selected social account.
+7. Hangfire scans for due scheduled posts.
+8. The platform poster publishes supported posts.
+9. The app stores publish attempts, result details, and external platform IDs.
 
-### Still intentionally temporary
-
-- local Facebook token storage is file-based for sandbox testing
-- Facebook OAuth flow is still being hardened
-- only Facebook text posting is implemented
-- no Facebook image/photo posting yet
-- no Instagram, LinkedIn, TikTok, or YouTube integration yet
-- no user authentication or brokerage-level permissions
-- no production secret storage
-- Hangfire dashboard is local-development only and not production-secured
-- retired fake/test code is kept under `docs/retired-code` for documentation history
+The current real publishing implementation is Facebook text posting. The UI is being shaped toward multi-platform scheduling, but Instagram, LinkedIn, TikTok, and YouTube publishing are not implemented yet.
 
 ---
 
-## Core Workflow
+## Working Now
+
+### Yacht Listing Flow
+
+- Yacht-focused sample listings instead of real estate/home listings.
+- Listing data includes yacht-specific fields such as:
+  - builder
+  - brokerage/company
+  - length
+  - year built
+  - cabins
+  - guest capacity
+  - max speed
+  - location
+  - price
+  - description
+- Listings page supports generating a generic scheduled social post.
+- Obsolete `Draft Facebook Post` button has been removed from the main listing cards.
+- Custom yacht card lets the user enter custom yacht information and send it to the AI caption generator.
+
+### AI Caption Generation
+
+- Uses OpenAI through an `ICaptionGenerator` abstraction.
+- Prompt is tuned for yacht brokerage marketing copy.
+- Caption generation avoids inventing yacht facts that were not provided.
+- Generated copy is intended to be platform-neutral for the current sandbox flow.
+
+### Multi-Account Scheduling UI
+
+- The old single-platform dropdown has been changed to account checkboxes.
+- User can select one or more connected social accounts.
+- Submitting the form creates one `ScheduledPost` row per selected social account.
+- This moves the sandbox closer to a real campaign-style workflow where one listing can produce multiple platform posts.
+
+### Scheduled Post Pipeline
+
+- `ScheduledPosts` table stores planned posts.
+- `PostAttempts` table records publish attempts and results.
+- Hangfire recurring job scans for due scheduled posts.
+- `ScheduledPostPublisher` sends due posts through the platform poster abstraction.
+- Details page shows post status, publish attempts, response JSON, and external platform post ID.
+
+### Facebook Publishing
+
+- Real Facebook Page text posting works through the Meta Graph API.
+- `SocialAccount.PlatformAccountId` is used as the Facebook Page ID.
+- `FacebookPagePoster` handles Facebook publishing.
+- Meta's returned post ID is stored after a successful publish.
+
+### OAuth / Token Work
+
+- Facebook OAuth connection flow exists as a local sandbox proof.
+- Local token storage is file-based and ignored by Git.
+- Production token storage is not implemented yet.
+
+---
+
+## Still Intentionally Temporary
+
+This repo is intentionally incomplete in the following areas:
+
+- Facebook text posting is the only real platform publishing implementation.
+- Instagram publishing is not implemented.
+- LinkedIn publishing is not implemented.
+- TikTok publishing is not implemented.
+- YouTube Shorts publishing is not implemented.
+- Facebook image/photo posting is not implemented yet.
+- OAuth flow still needs hardening.
+- Token expiration and reconnect handling are not complete.
+- Local token storage is file-based for sandbox testing.
+- Production secret storage is not implemented.
+- User authentication and brokerage-level permissions are not implemented.
+- Hangfire dashboard is for local development only and is not production-secured.
+- Engagement metrics collection is not implemented.
+- Retired fake/test code is kept under `docs/retired-code` for documentation history.
+
+---
+
+## Current Core Workflow
 
 ```text
-Broker opens Listings
+User opens Listings
         ↓
-User clicks Draft Facebook Post
+User reviews yacht listing cards or enters a custom yacht
         ↓
-App generates an AI caption with OpenAI
+User clicks Generate Generic Scheduled Post
         ↓
-User reviews and edits the Facebook post
+App generates a yacht-broker-style AI caption
         ↓
-User clicks Publish Reviewed Post to Facebook
+User reviews/edits the caption
         ↓
-App creates a ScheduledPost row
+User selects one or more connected social accounts with checkboxes
         ↓
-ScheduledPostPublisher publishes through FacebookPagePoster
+User chooses a scheduled date/time
         ↓
-Meta Graph API creates the Facebook Page post
+App creates one ScheduledPost row per selected social account
         ↓
-PostAttempt records the response
+Hangfire due-post scan finds posts whose scheduled time has arrived
+        ↓
+ScheduledPostPublisher sends each due post to the matching platform poster
+        ↓
+FacebookPagePoster publishes Facebook text posts through the Meta Graph API
+        ↓
+PostAttempt records the platform result
         ↓
 ScheduledPost stores status, attempt count, response JSON, and external post ID
 ```
@@ -109,9 +170,11 @@ ListingAutoPosterSandbox
     │   └── PostStatus.cs
     ├── ViewModels
     │   ├── CreateScheduledPostViewModel.cs
+    │   ├── CustomListingInputViewModel.cs
     │   ├── FacebookPostReviewViewModel.cs
     │   └── GeneratedCaptionViewModel.cs
     ├── Services
+    │   ├── Facebook
     │   ├── ICaptionGenerator.cs
     │   ├── OpenAiCaptionGenerator.cs
     │   ├── IDuePostScanner.cs
@@ -119,11 +182,6 @@ ListingAutoPosterSandbox
     │   ├── IScheduledPostPublisher.cs
     │   ├── ScheduledPostPublisher.cs
     │   ├── IPlatformPoster.cs
-    │   ├── FacebookPagePoster.cs
-    │   ├── FacebookPostResult.cs
-    │   ├── FacebookOAuthService.cs
-    │   ├── FacebookOAuthModels.cs
-    │   ├── FacebookOptions.cs
     │   ├── ITokenStore.cs
     │   └── LocalFacebookTokenStore.cs
     ├── Views
