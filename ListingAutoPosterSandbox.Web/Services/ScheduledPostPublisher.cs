@@ -1,3 +1,4 @@
+using System.Text.Json;
 using ListingAutoPosterSandbox.Web.Data;
 using ListingAutoPosterSandbox.Web.Models;
 using Microsoft.EntityFrameworkCore;
@@ -57,7 +58,6 @@ public class ScheduledPostPublisher : IScheduledPostPublisher
         };
 
         _context.PostAttempts.Add(attempt);
-
         await _context.SaveChangesAsync(cancellationToken);
 
         try
@@ -68,14 +68,18 @@ public class ScheduledPostPublisher : IScheduledPostPublisher
                     $"Scheduled post {scheduledPost.Id} does not have a social account.");
             }
 
-            var accessToken = await _tokenStore.GetAccessTokenAsync(
-                scheduledPost.SocialAccount.SecretName,
-                cancellationToken);
+            PostResult result;
 
-            var result = await _platformPoster.PublishAsync(
-                scheduledPost,
-                accessToken,
-                cancellationToken);
+            if (scheduledPost.Platform == PostPlatform.Facebook)
+            {
+                result = await PublishRealFacebookPostAsync(
+                    scheduledPost,
+                    cancellationToken);
+            }
+            else
+            {
+                result = CreateDemoPlatformResult(scheduledPost);
+            }
 
             attempt.CompletedUtc = DateTime.UtcNow;
             attempt.Success = result.Success;
@@ -95,7 +99,6 @@ public class ScheduledPostPublisher : IScheduledPostPublisher
             }
 
             scheduledPost.UpdatedUtc = DateTime.UtcNow;
-
             await _context.SaveChangesAsync(cancellationToken);
         }
         catch (Exception ex)
@@ -110,7 +113,56 @@ public class ScheduledPostPublisher : IScheduledPostPublisher
 
             await _context.SaveChangesAsync(cancellationToken);
 
-            throw;
+            // Do not rethrow here.
+            // In this sandbox, failed publishes should be recorded in the UI
+            // instead of crashing the browser request.
         }
+    }
+
+    private async Task<PostResult> PublishRealFacebookPostAsync(
+        ScheduledPost scheduledPost,
+        CancellationToken cancellationToken)
+    {
+        if (scheduledPost.SocialAccount is null)
+        {
+            return new PostResult
+            {
+                Success = false,
+                ErrorMessage = "Facebook post has no connected social account."
+            };
+        }
+
+        var accessToken = await _tokenStore.GetAccessTokenAsync(
+            scheduledPost.SocialAccount.SecretName,
+            cancellationToken);
+
+        return await _platformPoster.PublishAsync(
+            scheduledPost,
+            accessToken,
+            cancellationToken);
+    }
+
+    private static PostResult CreateDemoPlatformResult(ScheduledPost scheduledPost)
+    {
+        var externalPostId = $"demo-{scheduledPost.Platform.ToString().ToLower()}-{scheduledPost.Id}-{DateTime.UtcNow:yyyyMMddHHmmss}";
+
+        var response = new
+        {
+            success = true,
+            mode = "DemoOnly",
+            message = "This platform is simulated in the sandbox. No external API call was made.",
+            platform = scheduledPost.Platform.ToString(),
+            scheduledPostId = scheduledPost.Id,
+            externalPostId,
+            publishedUtc = DateTime.UtcNow
+        };
+
+        return new PostResult
+        {
+            Success = true,
+            ExternalPostId = externalPostId,
+            ResponseJson = JsonSerializer.Serialize(response),
+            ErrorMessage = null
+        };
     }
 }

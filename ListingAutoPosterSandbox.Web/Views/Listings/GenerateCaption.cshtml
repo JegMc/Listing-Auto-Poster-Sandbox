@@ -1,62 +1,97 @@
 @using ListingAutoPosterSandbox.Web.Models
 @model ListingAutoPosterSandbox.Web.ViewModels.GeneratedCaptionViewModel
+
 @{
     ViewData["Title"] = "Generated Caption";
-
     var defaultScheduleTime = DateTime.Now.AddHours(1).ToString("yyyy-MM-ddTHH:mm");
+    var location = string.IsNullOrWhiteSpace(Model.Listing.Location)
+        ? Model.Listing.Address
+        : Model.Listing.Location;
 }
 
-<h1>Generated Caption</h1>
+<div class="container mt-4">
+    <h1>Generated Caption</h1>
 
-<div class="mb-4">
-    <h4>@Model.Listing.Title</h4>
-    <p>@Model.Listing.Address</p>
-    <p><strong>@Model.Listing.Price.ToString("C0")</strong></p>
-    <p>@Model.Listing.Description</p>
-</div>
+    <div class="mb-4">
+        <h4>@Model.Listing.Title</h4>
 
-<form asp-controller="ScheduledPosts" asp-action="Create" method="post">
-    @Html.AntiForgeryToken()
+        @if (!string.IsNullOrWhiteSpace(location))
+        {
+            <p class="mb-1">@location</p>
+        }
 
-    <input type="hidden" name="ListingId" value="@Model.Listing.Id" />
+        <p class="fw-semibold mb-2">
+            @(Model.Listing.Price > 0 ? Model.Listing.Price.ToString("C0") : "Price on request")
+        </p>
 
-    <div class="mb-3">
-        <label for="Caption" class="form-label">Caption</label>
-        <textarea id="Caption" name="Caption" class="form-control" rows="8">@Model.Caption</textarea>
+        <p>@Model.Listing.Description</p>
     </div>
 
-    <div class="mb-3">
-        <label for="SocialAccountId" class="form-label">Social Account</label>
-        <select id="SocialAccountId" name="SocialAccountId" class="form-select">
-            @foreach (var account in Model.SocialAccounts)
-            {
-                <option value="@account.Id">
-                    @account.Platform - @account.DisplayName
-                </option>
-            }
-        </select>
+    <form asp-controller="ScheduledPosts" asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
 
-        <div class="form-text">
-            The selected account determines which platform will be used.
+        <input type="hidden" name="ListingId" value="@Model.Listing.Id" />
+
+        <div class="mb-3">
+            <label class="form-label" for="Caption">Caption</label>
+            <textarea class="form-control"
+                      id="Caption"
+                      name="Caption"
+                      rows="8"
+                      required>@Model.Caption</textarea>
         </div>
-    </div>
 
-    <div class="mb-3">
-        <label for="ScheduledLocal" class="form-label">Schedule Time</label>
-        <input id="ScheduledLocal"
-               name="ScheduledLocal"
-               type="datetime-local"
-               class="form-control"
-               value="@defaultScheduleTime" />
-    </div>
+        <div class="mb-3">
+            <label class="form-label">Social Accounts</label>
 
-    <button type="submit" class="btn btn-primary">
-        Schedule Post
-    </button>
+            @if (Model.SocialAccounts.Any())
+            {
+                <div class="border rounded p-3">
+                    @foreach (var account in Model.SocialAccounts)
+                    {
+                        <div class="form-check mb-2">
+                            <input class="form-check-input"
+                                type="checkbox"
+                                name="SocialAccountIds"
+                                value="@account.Id"
+                                id="social-account-@account.Id"
+                                checked="@(account.Platform.ToString().Equals("Facebook", StringComparison.OrdinalIgnoreCase))" />
 
-    <a class="btn btn-secondary"
-       asp-controller="Listings"
-       asp-action="Index">
-        Back to Listings
-    </a>
-</form>
+                            <label class="form-check-label" for="social-account-@account.Id">
+                                @account.Platform - @account.DisplayName
+                            </label>
+                        </div>
+                    }
+                </div>
+
+                <div class="form-text">
+                    Select one or more connected social accounts. Each selected account creates its own scheduled post.
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    No connected social accounts are available. Connect a social account before scheduling a post.
+                </div>
+            }
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label" for="ScheduledLocal">Schedule Time</label>
+            <input class="form-control"
+                   id="ScheduledLocal"
+                   name="ScheduledLocal"
+                   type="datetime-local"
+                   value="@defaultScheduleTime"
+                   required />
+        </div>
+
+        <button type="submit" class="btn btn-primary" @(Model.SocialAccounts.Any() ? "" : "disabled")>
+            Schedule Post
+        </button>
+
+        <a asp-controller="Listings" asp-action="Index" class="btn btn-secondary">
+            Back to Listings
+        </a>
+    </form>
+</div>

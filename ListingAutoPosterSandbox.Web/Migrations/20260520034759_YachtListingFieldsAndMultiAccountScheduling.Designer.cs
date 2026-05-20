@@ -4,6 +4,7 @@ using ListingAutoPosterSandbox.Web.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ListingAutoPosterSandbox.Web.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260520034759_YachtListingFieldsAndMultiAccountScheduling")]
+    partial class YachtListingFieldsAndMultiAccountScheduling
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -84,53 +87,38 @@ namespace ListingAutoPosterSandbox.Web.Migrations
                         new
                         {
                             Id = 1,
-                            Address = "Miami, FL",
-                            BrokerageCompany = "YATCO Demo Brokerage",
-                            Builder = "Sunseeker",
-                            Cabins = 4,
-                            Description = "A sleek motor yacht with modern entertaining spaces, refined interior finishes, expansive deck areas, and strong performance for coastal cruising.",
-                            Guests = 8,
-                            ImageUrl = "https://placehold.co/600x400?text=Azure+Horizon",
-                            LengthFeet = 88m,
-                            Location = "Miami, FL",
-                            MaxSpeedKnots = 28m,
-                            Price = 5495000m,
-                            Title = "M/Y Azure Horizon",
-                            YearBuilt = 2020
+                            Address = "123 Main Street, Nashville, TN",
+                            BrokerageCompany = "",
+                            Builder = "",
+                            Description = "A bright two-bedroom condo near restaurants, shops, and public transit.",
+                            ImageUrl = "https://placehold.co/600x400",
+                            Location = "",
+                            Price = 425000m,
+                            Title = "Modern Downtown Condo"
                         },
                         new
                         {
                             Id = 2,
-                            Address = "Palm Beach, FL",
-                            BrokerageCompany = "YATCO Demo Brokerage",
-                            Builder = "Azimut",
-                            Cabins = 4,
-                            Description = "A well-appointed flybridge yacht designed for relaxed cruising, featuring generous outdoor lounging areas, a bright salon, and comfortable guest accommodations.",
-                            Guests = 8,
-                            ImageUrl = "https://placehold.co/600x400?text=Silver+Current",
-                            LengthFeet = 72m,
-                            Location = "Palm Beach, FL",
-                            MaxSpeedKnots = 31m,
-                            Price = 3250000m,
-                            Title = "M/Y Silver Current",
-                            YearBuilt = 2018
+                            Address = "456 Oak Ridge Drive, Franklin, TN",
+                            BrokerageCompany = "",
+                            Builder = "",
+                            Description = "A spacious four-bedroom home with an open kitchen and fenced backyard.",
+                            ImageUrl = "https://placehold.co/600x400",
+                            Location = "",
+                            Price = 675000m,
+                            Title = "Family Home with Large Backyard"
                         },
                         new
                         {
                             Id = 3,
-                            Address = "Fort Lauderdale, FL",
-                            BrokerageCompany = "YATCO Demo Brokerage",
-                            Builder = "Beneteau",
-                            Cabins = 3,
-                            Description = "A capable sailing yacht with clean lines, efficient handling, comfortable accommodations, and a practical layout suited for extended coastal passages.",
-                            Guests = 6,
-                            ImageUrl = "https://placehold.co/600x400?text=Wind+Meridian",
-                            LengthFeet = 58m,
-                            Location = "Fort Lauderdale, FL",
-                            MaxSpeedKnots = 12m,
-                            Price = 875000m,
-                            Title = "S/Y Wind Meridian",
-                            YearBuilt = 2019
+                            Address = "789 Cedar Lane, Murfreesboro, TN",
+                            BrokerageCompany = "",
+                            Builder = "",
+                            Description = "A low-maintenance townhome close to walking trails and local parks.",
+                            ImageUrl = "https://placehold.co/600x400",
+                            Location = "",
+                            Price = 350000m,
+                            Title = "Quiet Townhome Near Parks"
                         });
                 });
 
