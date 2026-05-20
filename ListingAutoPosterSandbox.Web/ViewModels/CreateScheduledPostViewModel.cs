@@ -3,8 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace ListingAutoPosterSandbox.Web.ViewModels;
 
 /// <summary>
-/// View model used when the older generic scheduling flow creates a ScheduledPost.
-/// 
+/// View model used when the generic scheduling flow creates one or more ScheduledPost rows.
 /// This is not a database table. It represents form input from the schedule-post page.
 /// </summary>
 public class CreateScheduledPostViewModel
@@ -13,7 +12,8 @@ public class CreateScheduledPostViewModel
     public int ListingId { get; set; }
 
     [Required]
-    public int SocialAccountId { get; set; }
+    [MinLength(1, ErrorMessage = "Select at least one connected social account.")]
+    public List<int> SocialAccountIds { get; set; } = new();
 
     [Required]
     [StringLength(2000)]

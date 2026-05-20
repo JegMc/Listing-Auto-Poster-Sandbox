@@ -48,29 +48,53 @@ public class AppDbContext : DbContext
             new Listing
             {
                 Id = 1,
-                Title = "Modern Downtown Condo",
-                Address = "123 Main Street, Nashville, TN",
-                Price = 425000,
-                Description = "A bright two-bedroom condo near restaurants, shops, and public transit.",
-                ImageUrl = "https://placehold.co/600x400"
+                Title = "M/Y Azure Horizon",
+                Address = "Miami, FL",
+                Location = "Miami, FL",
+                Builder = "Sunseeker",
+                BrokerageCompany = "YATCO Demo Brokerage",
+                LengthFeet = 88,
+                YearBuilt = 2020,
+                Cabins = 4,
+                Guests = 8,
+                MaxSpeedKnots = 28,
+                Price = 5495000,
+                Description = "A sleek motor yacht with modern entertaining spaces, refined interior finishes, expansive deck areas, and strong performance for coastal cruising.",
+                ImageUrl = "https://placehold.co/600x400?text=Azure+Horizon"
             },
             new Listing
             {
                 Id = 2,
-                Title = "Family Home with Large Backyard",
-                Address = "456 Oak Ridge Drive, Franklin, TN",
-                Price = 675000,
-                Description = "A spacious four-bedroom home with an open kitchen and fenced backyard.",
-                ImageUrl = "https://placehold.co/600x400"
+                Title = "M/Y Silver Current",
+                Address = "Palm Beach, FL",
+                Location = "Palm Beach, FL",
+                Builder = "Azimut",
+                BrokerageCompany = "YATCO Demo Brokerage",
+                LengthFeet = 72,
+                YearBuilt = 2018,
+                Cabins = 4,
+                Guests = 8,
+                MaxSpeedKnots = 31,
+                Price = 3250000,
+                Description = "A well-appointed flybridge yacht designed for relaxed cruising, featuring generous outdoor lounging areas, a bright salon, and comfortable guest accommodations.",
+                ImageUrl = "https://placehold.co/600x400?text=Silver+Current"
             },
             new Listing
             {
                 Id = 3,
-                Title = "Quiet Townhome Near Parks",
-                Address = "789 Cedar Lane, Murfreesboro, TN",
-                Price = 350000,
-                Description = "A low-maintenance townhome close to walking trails and local parks.",
-                ImageUrl = "https://placehold.co/600x400"
+                Title = "S/Y Wind Meridian",
+                Address = "Fort Lauderdale, FL",
+                Location = "Fort Lauderdale, FL",
+                Builder = "Beneteau",
+                BrokerageCompany = "YATCO Demo Brokerage",
+                LengthFeet = 58,
+                YearBuilt = 2019,
+                Cabins = 3,
+                Guests = 6,
+                MaxSpeedKnots = 12,
+                Price = 875000,
+                Description = "A capable sailing yacht with clean lines, efficient handling, comfortable accommodations, and a practical layout suited for extended coastal passages.",
+                ImageUrl = "https://placehold.co/600x400?text=Wind+Meridian"
             }
         );
         modelBuilder.Entity<SocialAccount>().HasData(

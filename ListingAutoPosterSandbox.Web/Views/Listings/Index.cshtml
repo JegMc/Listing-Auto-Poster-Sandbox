@@ -21,6 +21,105 @@
 }
 
 <p>Select a listing to generate, schedule, or publish a social media post.</p>
+    <div class="card mb-4 border-primary">
+        <div class="card-header bg-primary text-white">
+            Custom Yacht Post
+        </div>
+
+        <div class="card-body">
+            <p class="text-muted">
+                Enter any yacht, brokerage, buyer, seller, or marketing information. The AI will turn it into a yacht-focused social media caption.
+            </p>
+
+            <form asp-controller="Listings" asp-action="GenerateCustomCaption" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    <label class="form-label" for="CustomDetails">Custom Information</label>
+                    <textarea class="form-control"
+                            id="CustomDetails"
+                            name="CustomDetails"
+                            rows="6"
+                            required
+                            placeholder="Example: Create a professional yacht broker post for a 90 ft Benetti in Palm Beach. Mention modern interior updates, strong charter potential, outdoor entertaining space, and a soft call to action."></textarea>
+                    <div class="form-text">
+                        This can be structured data, rough notes, or a plain English request.
+                    </div>
+                </div>
+
+                <details class="mb-3">
+                    <summary class="fw-semibold">Optional structured yacht fields</summary>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <label class="form-label" for="Title">Yacht / Listing Title</label>
+                            <input class="form-control" id="Title" name="Title" placeholder="Optional" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="Builder">Builder</label>
+                            <input class="form-control" id="Builder" name="Builder" placeholder="Optional" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="BrokerageCompany">Company / Brokerage</label>
+                            <input class="form-control" id="BrokerageCompany" name="BrokerageCompany" placeholder="Optional" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="Location">Location</label>
+                            <input class="form-control" id="Location" name="Location" placeholder="Optional" />
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label" for="LengthFeet">Length</label>
+                            <div class="input-group">
+                                <input class="form-control" id="LengthFeet" name="LengthFeet" type="number" step="0.1" min="1" placeholder="Optional" />
+                                <span class="input-group-text">ft</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label" for="YearBuilt">Year Built</label>
+                            <input class="form-control" id="YearBuilt" name="YearBuilt" type="number" min="1800" max="2100" placeholder="Optional" />
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label" for="Cabins">Cabins</label>
+                            <input class="form-control" id="Cabins" name="Cabins" type="number" min="0" placeholder="Optional" />
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label" for="Guests">Guests</label>
+                            <input class="form-control" id="Guests" name="Guests" type="number" min="0" placeholder="Optional" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label" for="MaxSpeedKnots">Max Speed</label>
+                            <div class="input-group">
+                                <input class="form-control" id="MaxSpeedKnots" name="MaxSpeedKnots" type="number" step="0.1" min="0" placeholder="Optional" />
+                                <span class="input-group-text">kn</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label" for="Price">Price</label>
+                            <input class="form-control" id="Price" name="Price" type="number" step="1" min="0" placeholder="Optional" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label" for="ImageUrl">Image URL</label>
+                            <input class="form-control" id="ImageUrl" name="ImageUrl" placeholder="Optional. Leave blank if not needed." />
+                        </div>
+                    </div>
+                </details>
+
+                <button type="submit" class="btn btn-primary">
+                    Generate Custom Scheduled Post
+                </button>
+            </form>
+        </div>
+    </div>
 
 @if (Model is null || !Model.Any())
 {
@@ -41,18 +140,53 @@ else
 
                     <div class="card-body">
                         <h5 class="card-title">@listing.Title</h5>
+                            <p class="text-muted mb-2">
+                                @(string.IsNullOrWhiteSpace(listing.Location) ? listing.Address : listing.Location)
+                            </p>
+                            <div class="mb-2">
+                                @if (!string.IsNullOrWhiteSpace(listing.Builder))
+                                {
+                                    <span class="badge bg-secondary me-1">Builder: @listing.Builder</span>
+                                }
 
-                        <p class="card-text">
-                            @listing.Address
-                        </p>
+                                @if (!string.IsNullOrWhiteSpace(listing.BrokerageCompany))
+                                {
+                                    <span class="badge bg-secondary me-1">Company: @listing.BrokerageCompany</span>
+                                }
 
-                        <p class="card-text">
-                            <strong>@listing.Price.ToString("C0")</strong>
-                        </p>
+                                @if (listing.LengthFeet.HasValue)
+                                {
+                                    <span class="badge bg-secondary me-1">@listing.LengthFeet.Value.ToString("0.#") ft</span>
+                                }
 
-                        <p class="card-text">
-                            @listing.Description
-                        </p>
+                                @if (listing.YearBuilt.HasValue)
+                                {
+                                    <span class="badge bg-secondary me-1">Year: @listing.YearBuilt</span>
+                                }
+
+                                @if (listing.Cabins.HasValue)
+                                {
+                                    <span class="badge bg-secondary me-1">Cabins: @listing.Cabins</span>
+                                }
+
+                                @if (listing.Guests.HasValue)
+                                {
+                                    <span class="badge bg-secondary me-1">Guests: @listing.Guests</span>
+                                }
+
+                                @if (listing.MaxSpeedKnots.HasValue)
+                                {
+                                    <span class="badge bg-secondary me-1">Max: @listing.MaxSpeedKnots.Value.ToString("0.#") kn</span>
+                                }
+                            </div>
+
+                            <p class="fw-semibold mb-2">
+                                @(listing.Price > 0 ? listing.Price.ToString("C0") : "Price on request")
+                            </p>
+
+                            <p class="card-text">
+                                @listing.Description
+                            </p>
 
                         <div class="d-flex gap-2 flex-wrap">
                             <a class="btn btn-primary"
@@ -67,10 +201,6 @@ else
                                 method="post"
                                 class="d-inline">
                                 @Html.AntiForgeryToken()
-
-                                <button type="submit" class="btn btn-success">
-                                    Draft Facebook Post
-                                </button>
                             </form>
                         </div>
                     </div>

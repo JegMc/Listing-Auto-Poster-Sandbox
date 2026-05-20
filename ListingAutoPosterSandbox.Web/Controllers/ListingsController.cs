@@ -67,6 +67,65 @@ public class ListingsController : Controller
         return View(viewModel);
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GenerateCustomCaption(
+        CustomListingInputViewModel input,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Enter custom yacht or marketing information before generating a caption.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var location = input.Location?.Trim() ?? string.Empty;
+
+        var listing = new Listing
+        {
+            Title = string.IsNullOrWhiteSpace(input.Title)
+                ? "Custom Yacht Post"
+                : input.Title.Trim(),
+
+            Builder = input.Builder?.Trim() ?? string.Empty,
+            BrokerageCompany = input.BrokerageCompany?.Trim() ?? string.Empty,
+            LengthFeet = input.LengthFeet,
+            YearBuilt = input.YearBuilt,
+            Location = location,
+            Address = location,
+            Price = input.Price ?? 0,
+            Cabins = input.Cabins,
+            Guests = input.Guests,
+            MaxSpeedKnots = input.MaxSpeedKnots,
+
+            // The freeform user input becomes the main description sent to the AI caption generator.
+            Description = input.CustomDetails.Trim(),
+
+            ImageUrl = string.IsNullOrWhiteSpace(input.ImageUrl)
+                ? "https://placehold.co/600x400?text=Custom+Yacht"
+                : input.ImageUrl.Trim()
+        };
+
+        _context.Listings.Add(listing);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        var caption = await _captionGenerator.GenerateCaptionAsync(
+            listing,
+            cancellationToken);
+
+        var socialAccounts = await GetConnectedSocialAccountsAsync(cancellationToken);
+
+        var viewModel = new GeneratedCaptionViewModel
+        {
+            Listing = listing,
+            Caption = caption,
+            SocialAccounts = socialAccounts
+        };
+
+        return View("GenerateCaption", viewModel);
+    }
+    
+    
     // Newer Facebook-specific flow.
     // This action creates an AI-generated draft and sends the user to a review/edit page.
     // It does not publish immediately.

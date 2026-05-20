@@ -71,7 +71,8 @@ public class ScheduledPostsController : Controller
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest("The scheduled post form was invalid.");
+            TempData["Error"] = "The scheduled post form was invalid. Select at least one social account and try again.";
+            return RedirectToAction("Index", "Listings");
         }
 
         var listingExists = await _context.Listings
@@ -82,14 +83,19 @@ public class ScheduledPostsController : Controller
             return NotFound("Listing not found.");
         }
 
-        var socialAccount = await _context.SocialAccounts
-            .FirstOrDefaultAsync(
-                account => account.Id == viewModel.SocialAccountId && account.IsConnected,
-                cancellationToken);
+        var selectedAccountIds = viewModel.SocialAccountIds
+            .Distinct()
+            .ToList();
 
-        if (socialAccount is null)
+        var socialAccounts = await _context.SocialAccounts
+            .Where(account => selectedAccountIds.Contains(account.Id) && account.IsConnected)
+            .OrderBy(account => account.Platform)
+            .ToListAsync(cancellationToken);
+
+        if (socialAccounts.Count == 0)
         {
-            return NotFound("Connected social account not found.");
+            TempData["Error"] = "No connected social accounts were selected.";
+            return RedirectToAction("Index", "Listings");
         }
 
         var scheduledUtc = DateTime.SpecifyKind(
@@ -99,22 +105,26 @@ public class ScheduledPostsController : Controller
 
         var nowUtc = DateTime.UtcNow;
 
-        var scheduledPost = new ScheduledPost
+        foreach (var socialAccount in socialAccounts)
         {
-            ListingId = viewModel.ListingId,
-            SocialAccountId = socialAccount.Id,
-            Platform = socialAccount.Platform,
-            Caption = viewModel.Caption.Trim(),
-            ScheduledUtc = scheduledUtc,
-            Status = PostStatus.Scheduled,
-            CreatedUtc = nowUtc,
-            UpdatedUtc = nowUtc
-        };
+            var scheduledPost = new ScheduledPost
+            {
+                ListingId = viewModel.ListingId,
+                SocialAccountId = socialAccount.Id,
+                Platform = socialAccount.Platform,
+                Caption = viewModel.Caption.Trim(),
+                ScheduledUtc = scheduledUtc,
+                Status = PostStatus.Scheduled,
+                CreatedUtc = nowUtc,
+                UpdatedUtc = nowUtc
+            };
 
-        _context.ScheduledPosts.Add(scheduledPost);
+            _context.ScheduledPosts.Add(scheduledPost);
+        }
 
         await _context.SaveChangesAsync(cancellationToken);
 
+        TempData["Success"] = $"Created {socialAccounts.Count} scheduled post(s).";
         return RedirectToAction(nameof(Index));
     }
 
