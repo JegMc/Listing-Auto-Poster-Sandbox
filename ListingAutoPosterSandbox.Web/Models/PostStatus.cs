@@ -6,5 +6,6 @@ public enum PostStatus
     Scheduled = 2,
     Processing = 3,
     Posted = 4,
-    Failed = 5
+    Failed = 5,
+    Cancelled = 6
 }

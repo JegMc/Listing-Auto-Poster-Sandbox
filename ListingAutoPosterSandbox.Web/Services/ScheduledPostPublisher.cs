@@ -37,7 +37,8 @@ public class ScheduledPostPublisher : IScheduledPostPublisher
             throw new InvalidOperationException($"Scheduled post {scheduledPostId} was not found.");
         }
 
-        if (scheduledPost.Status == PostStatus.Posted)
+        if (scheduledPost.Status == PostStatus.Posted ||
+            scheduledPost.Status == PostStatus.Cancelled)
         {
             return;
         }

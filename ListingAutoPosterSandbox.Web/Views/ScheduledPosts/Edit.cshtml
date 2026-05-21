@@ -1,0 +1,226 @@
+@model ListingAutoPosterSandbox.Web.ViewModels.EditScheduledPostViewModel
+
+@{
+    ViewData["Title"] = "Edit Scheduled Post";
+    var defaultScheduleDate = Model.ScheduledLocal.ToString("yyyy-MM-dd");
+    var defaultScheduleTime = Model.ScheduledLocal.ToString("HH:mm");
+    var defaultScheduleHiddenValue = Model.ScheduledLocal.ToString("yyyy-MM-ddTHH:mm");
+
+    var timeOptions = Enumerable
+        .Range(14, 31)
+        .Select(index => TimeSpan.FromMinutes(index * 30))
+        .ToList();
+}
+
+<div class="yatco-page-shell">
+    <section class="yatco-page-header">
+        <div>
+            <p class="yatco-eyebrow">Publishing Queue</p>
+            <h1>Edit Scheduled Post</h1>
+            <p>
+                Update the caption or scheduled time before this post is published.
+            </p>
+        </div>
+
+        <a asp-controller="ScheduledPosts"
+           asp-action="Details"
+           asp-route-id="@Model.Id"
+           class="btn yatco-secondary-button">
+            Back to Details
+        </a>
+    </section>
+
+    <section class="yatco-scheduler-panel">
+        <form asp-controller="ScheduledPosts" asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" asp-for="Id" />
+
+            <div class="yatco-post-meta-grid">
+                <div>
+                    <span>Listing</span>
+                    <strong>@Model.ListingTitle</strong>
+                </div>
+
+                <div>
+                    <span>Platform</span>
+                    <strong>@Model.Platform</strong>
+                </div>
+
+                <div>
+                    <span>Social Account</span>
+                    <strong>@Model.SocialAccountDisplayName</strong>
+                </div>
+            </div>
+
+            <div class="yatco-form-group">
+                <label asp-for="Caption" class="yatco-form-label">Caption</label>
+                <textarea asp-for="Caption"
+                          class="form-control yatco-caption-box"
+                          rows="8"
+                          maxlength="2000"></textarea>
+                <span asp-validation-for="Caption" class="text-danger"></span>
+            </div>
+
+            <div class="yatco-form-group">
+                <label class="yatco-form-label">Schedule Time</label>
+
+                <input id="ScheduledLocal"
+                       name="ScheduledLocal"
+                       type="hidden"
+                       value="@defaultScheduleHiddenValue" />
+
+                <div class="yatco-schedule-picker">
+                    <div class="yatco-schedule-field">
+                        <span class="yatco-schedule-label">Date</span>
+                        <input id="ScheduleDatePicker"
+                               type="date"
+                               class="form-control yatco-date-input"
+                               value="@defaultScheduleDate" />
+                    </div>
+
+                    <div class="yatco-schedule-field">
+                        <span class="yatco-schedule-label">Time</span>
+                        <select id="ScheduleTimePicker"
+                                class="form-select yatco-time-select">
+                            @foreach (var timeOption in timeOptions)
+                            {
+                                var timeValue = timeOption.ToString(@"hh\:mm");
+                                var timeLabel = DateTime.Today.Add(timeOption).ToString("h:mm tt");
+
+                                if (timeValue == defaultScheduleTime)
+                                {
+                                    <option value="@timeValue" selected>@timeLabel</option>
+                                }
+                                else
+                                {
+                                    <option value="@timeValue">@timeLabel</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="yatco-schedule-presets" aria-label="Quick schedule options">
+                    <button type="button" class="yatco-preset-button" data-schedule-preset="2h">
+                        In 2 hours
+                    </button>
+                    <button type="button" class="yatco-preset-button" data-schedule-preset="tomorrow-9">
+                        Tomorrow 9:00 AM
+                    </button>
+                    <button type="button" class="yatco-preset-button" data-schedule-preset="tomorrow-12">
+                        Tomorrow 12:00 PM
+                    </button>
+                    <button type="button" class="yatco-preset-button" data-schedule-preset="tomorrow-15">
+                        Tomorrow 3:00 PM
+                    </button>
+                </div>
+
+                <p id="SchedulePreview" class="yatco-schedule-preview"></p>
+                <span asp-validation-for="ScheduledLocal" class="text-danger"></span>
+            </div>
+
+            <div class="yatco-action-row">
+                <a asp-controller="ScheduledPosts"
+                   asp-action="Details"
+                   asp-route-id="@Model.Id"
+                   class="btn yatco-secondary-button">
+                    Cancel Editing
+                </a>
+
+                <button type="submit" class="btn yatco-primary-button">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (() => {
+            const dateInput = document.getElementById("ScheduleDatePicker");
+            const timeInput = document.getElementById("ScheduleTimePicker");
+            const hiddenInput = document.getElementById("ScheduledLocal");
+            const preview = document.getElementById("SchedulePreview");
+
+            if (!dateInput || !timeInput || !hiddenInput) {
+                return;
+            }
+
+            function pad(value) {
+                return value.toString().padStart(2, "0");
+            }
+
+            function toDateValue(date) {
+                return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+            }
+
+            function toTimeValue(date) {
+                return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+            }
+
+            function updateSchedulePreview() {
+                hiddenInput.value = `${dateInput.value}T${timeInput.value}`;
+
+                const selectedDate = new Date(hiddenInput.value);
+
+                if (!Number.isNaN(selectedDate.getTime()) && preview) {
+                    preview.textContent = `Selected schedule: ${selectedDate.toLocaleString([], {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit"
+                    })}`;
+                }
+            }
+
+            function setSchedule(date) {
+                dateInput.value = toDateValue(date);
+                timeInput.value = toTimeValue(date);
+                updateSchedulePreview();
+            }
+
+            dateInput.addEventListener("change", updateSchedulePreview);
+            timeInput.addEventListener("change", updateSchedulePreview);
+
+            document.querySelectorAll("[data-schedule-preset]").forEach(button => {
+                button.addEventListener("click", () => {
+                    const preset = button.getAttribute("data-schedule-preset");
+                    const selected = new Date();
+
+                    if (preset === "2h") {
+                        selected.setHours(selected.getHours() + 2);
+                        selected.setMinutes(selected.getMinutes() <= 30 ? 30 : 0);
+
+                        if (selected.getMinutes() === 0) {
+                            selected.setHours(selected.getHours() + 1);
+                        }
+                    }
+
+                    if (preset === "tomorrow-9") {
+                        selected.setDate(selected.getDate() + 1);
+                        selected.setHours(9, 0, 0, 0);
+                    }
+
+                    if (preset === "tomorrow-12") {
+                        selected.setDate(selected.getDate() + 1);
+                        selected.setHours(12, 0, 0, 0);
+                    }
+
+                    if (preset === "tomorrow-15") {
+                        selected.setDate(selected.getDate() + 1);
+                        selected.setHours(15, 0, 0, 0);
+                    }
+
+                    setSchedule(selected);
+                });
+            });
+
+            updateSchedulePreview();
+        })();
+    </script>
+}

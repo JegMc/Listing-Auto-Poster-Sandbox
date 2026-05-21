@@ -140,4 +140,130 @@ public class ScheduledPostsController : Controller
 
         return RedirectToAction(nameof(Index));
     }
+
+
+    [HttpGet]
+    public async Task<IActionResult> Edit(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        var scheduledPost = await _context.ScheduledPosts
+            .Include(post => post.Listing)
+            .Include(post => post.SocialAccount)
+            .FirstOrDefaultAsync(post => post.Id == id, cancellationToken);
+
+        if (scheduledPost is null)
+        {
+            return NotFound();
+        }
+
+        if (scheduledPost.Status != PostStatus.Scheduled)
+        {
+            TempData["Error"] = "Only scheduled posts can be edited.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var viewModel = new EditScheduledPostViewModel
+            {
+                Id = scheduledPost.Id,
+                ListingTitle = scheduledPost.Listing?.Title ?? "Unknown listing",
+                Platform = scheduledPost.Platform.ToString(),
+                SocialAccountDisplayName = scheduledPost.SocialAccount?.DisplayName ?? "None",
+                Caption = scheduledPost.Caption,
+                ScheduledLocal = DateTime.SpecifyKind(
+                        scheduledPost.ScheduledUtc,
+                        DateTimeKind.Utc)
+                    .ToLocalTime()
+            };
+
+        return View(viewModel);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(
+        EditScheduledPostViewModel viewModel,
+        CancellationToken cancellationToken)
+    {
+        var scheduledPost = await _context.ScheduledPosts
+            .Include(post => post.Listing)
+            .Include(post => post.SocialAccount)
+            .FirstOrDefaultAsync(post => post.Id == viewModel.Id, cancellationToken);
+
+        if (scheduledPost is null)
+        {
+            return NotFound();
+        }
+
+        if (scheduledPost.Status != PostStatus.Scheduled)
+        {
+            TempData["Error"] = "Only scheduled posts can be edited.";
+            return RedirectToAction(nameof(Details), new { id = scheduledPost.Id });
+        }
+
+        if (!ModelState.IsValid)
+        {
+            viewModel.ListingTitle = scheduledPost.Listing?.Title ?? "Unknown listing";
+            viewModel.Platform = scheduledPost.Platform.ToString();
+            viewModel.SocialAccountDisplayName = scheduledPost.SocialAccount?.DisplayName ?? "None";
+
+            return View(viewModel);
+        }
+
+        var scheduledUtc = DateTime.SpecifyKind(
+                viewModel.ScheduledLocal,
+                DateTimeKind.Local)
+            .ToUniversalTime();
+
+        if (scheduledUtc <= DateTime.UtcNow)
+        {
+            ModelState.AddModelError(
+                nameof(viewModel.ScheduledLocal),
+                "Scheduled time must be in the future.");
+
+            viewModel.ListingTitle = scheduledPost.Listing?.Title ?? "Unknown listing";
+            viewModel.Platform = scheduledPost.Platform.ToString();
+            viewModel.SocialAccountDisplayName = scheduledPost.SocialAccount?.DisplayName ?? "None";
+
+            return View(viewModel);
+        }
+
+        scheduledPost.Caption = viewModel.Caption.Trim();
+        scheduledPost.ScheduledUtc = scheduledUtc;
+        scheduledPost.UpdatedUtc = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        TempData["Success"] = "Scheduled post updated.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Cancel(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        var scheduledPost = await _context.ScheduledPosts
+            .FirstOrDefaultAsync(post => post.Id == id, cancellationToken);
+
+        if (scheduledPost is null)
+        {
+            return NotFound();
+        }
+
+        if (scheduledPost.Status != PostStatus.Scheduled)
+        {
+            TempData["Error"] = "Only scheduled posts can be cancelled.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        scheduledPost.Status = PostStatus.Cancelled;
+        scheduledPost.UpdatedUtc = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        TempData["Success"] = "Scheduled post updated.";
+        return RedirectToAction(nameof(Index));
+    }
 }

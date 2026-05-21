@@ -1554,3 +1554,22 @@ body {
         flex-direction: column;
     }
 }
+
+.yatco-danger-button {
+    border: 1px solid rgba(170, 50, 50, 0.35);
+    border-radius: 999px;
+    background: rgba(170, 50, 50, 0.08);
+    color: #7f1d1d;
+    font-weight: 800;
+}
+
+.yatco-danger-button:hover {
+    border-color: #7f1d1d;
+    background: #7f1d1d;
+    color: #ffffff;
+}
+
+.yatco-status-cancelled {
+    background: rgba(102, 120, 138, 0.13);
+    color: var(--yatco-muted);
+}

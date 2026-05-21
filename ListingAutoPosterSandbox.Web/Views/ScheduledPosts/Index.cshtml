@@ -138,18 +138,42 @@
 
                     <div class="yatco-post-actions">
                         <a asp-controller="ScheduledPosts"
-                           asp-action="Details"
-                           asp-route-id="@post.Id"
-                           class="btn yatco-secondary-button">
+                        asp-action="Details"
+                        asp-route-id="@post.Id"
+                        class="btn yatco-secondary-button">
                             Details
                         </a>
 
-                        @if (post.Status != PostStatus.Posted)
+                        @if (post.Status == PostStatus.Scheduled)
+                        {
+                            <a asp-controller="ScheduledPosts"
+                            asp-action="Edit"
+                            asp-route-id="@post.Id"
+                            class="btn yatco-secondary-button">
+                                Edit
+                            </a>
+
+                            <form asp-controller="ScheduledPosts"
+                                asp-action="Cancel"
+                                asp-route-id="@post.Id"
+                                method="post"
+                                class="yatco-inline-form"
+                                onsubmit="return confirm('Cancel this scheduled post?');">
+                                @Html.AntiForgeryToken()
+
+                                <button type="submit" class="btn yatco-danger-button">
+                                    Cancel
+                                </button>
+                            </form>
+                        }
+
+                        @if (post.Status == PostStatus.Scheduled || post.Status == PostStatus.Failed)
                         {
                             <form asp-controller="ScheduledPosts"
-                                  asp-action="PublishNow"
-                                  asp-route-id="@post.Id"
-                                  method="post">
+                                asp-action="PublishNow"
+                                asp-route-id="@post.Id"
+                                method="post"
+                                class="yatco-inline-form">
                                 @Html.AntiForgeryToken()
 
                                 <button type="submit" class="btn yatco-primary-button">
@@ -157,10 +181,18 @@
                                 </button>
                             </form>
                         }
-                        else
+
+                        @if (post.Status == PostStatus.Posted)
                         {
                             <span class="yatco-published-label">
                                 Published
+                            </span>
+                        }
+
+                        @if (post.Status == PostStatus.Cancelled)
+                        {
+                            <span class="yatco-published-label">
+                                Cancelled
                             </span>
                         }
                     </div>
