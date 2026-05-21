@@ -529,3 +529,241 @@ and a more polished YATCO-inspired interface.
 Not production-ready:
 This remains a learning and architecture proof of concept.
 ```
+
+---
+
+## Important Pages
+
+```text
+/                  Dashboard and workflow overview
+/Listings          Yacht listing cards and custom yacht input
+/SocialAccounts    Connect/review social account records
+/ScheduledPosts    Scheduled post queue and publish actions
+/Hangfire          Local Hangfire dashboard
+```
+
+---
+
+## Local Setup
+
+### 1. Clone the repo
+
+```powershell
+git clone git@github.com:JegMc/Listing-Auto-Poster-Sandbox.git
+cd Listing-Auto-Poster-Sandbox
+```
+
+### 2. Restore packages
+
+```powershell
+dotnet restore
+```
+
+### 3. Configure local user secrets
+
+This project expects sensitive values to come from local user-secrets, not committed config files.
+
+```powershell
+cd .\ListingAutoPosterSandbox.Web
+dotnet user-secrets init
+```
+
+Set your OpenAI API key:
+
+```powershell
+dotnet user-secrets set "OpenAI:ApiKey" "YOUR_OPENAI_API_KEY"
+```
+
+Optional model override:
+
+```powershell
+dotnet user-secrets set "OpenAI:Model" "gpt-5-mini"
+```
+
+For Facebook OAuth testing, set Meta app configuration through user-secrets as needed by your local code path:
+
+```powershell
+dotnet user-secrets set "Facebook:AppId" "YOUR_META_APP_ID"
+dotnet user-secrets set "Facebook:AppSecret" "YOUR_META_APP_SECRET"
+dotnet user-secrets set "Facebook:GraphApiVersion" "v20.0"
+```
+
+Do not commit real keys, tokens, app secrets, or local token files.
+
+### 4. Apply database migrations
+
+From the repo root:
+
+```powershell
+dotnet ef database update --project .\ListingAutoPosterSandbox.Web\ListingAutoPosterSandbox.Web.csproj
+```
+
+### 5. Build
+
+```powershell
+dotnet build
+```
+
+### 6. Run
+
+```powershell
+dotnet watch run --project .\ListingAutoPosterSandbox.Web\ListingAutoPosterSandbox.Web.csproj --launch-profile http
+```
+
+---
+
+## Local Development Safety
+
+The following should never be committed:
+
+```text
+App_Data/
+facebook-tokens.local.json
+.env
+.env.*
+real access tokens
+real refresh tokens
+Meta app secret
+OpenAI API key
+published output
+local database files
+```
+
+Before pushing, run:
+
+```powershell
+git status
+git ls-files | Select-String -Pattern "App_Data|facebook-tokens|\.env|secret|token|key"
+dotnet build
+```
+
+If a real secret ever appears in Git history, revoke it immediately.
+
+---
+
+## Current Limitations
+
+This repo is intentionally incomplete in the following areas:
+
+- Facebook text posting is the only real platform publishing implementation.
+- Instagram publishing is not implemented.
+- LinkedIn publishing is not implemented.
+- TikTok publishing is not implemented.
+- YouTube Shorts publishing is not implemented.
+- Facebook image/photo posting is not implemented yet.
+- OAuth flow still needs hardening.
+- Token expiration and reconnect handling are not complete.
+- Local token storage is file-based for sandbox testing.
+- Production secret storage is not implemented.
+- User authentication and brokerage-level permissions are not implemented.
+- Hangfire dashboard is for local development only and is not production-secured.
+- Engagement metrics collection is not implemented.
+- Retired fake/test code is kept under `docs/retired-code` for documentation history.
+
+---
+
+## Current Limitation: Multi-Platform UI vs Multi-Platform Publishing
+
+The UI can schedule posts for multiple selected social accounts.
+
+However, the backend currently has real publishing support only for Facebook text posts.
+
+That means:
+
+```text
+Facebook scheduled rows:
+- can publish through the Meta Graph API
+
+Instagram scheduled rows:
+- future integration target
+
+LinkedIn scheduled rows:
+- future integration target
+
+TikTok scheduled rows:
+- future integration target
+
+YouTube scheduled rows:
+- future integration target
+```
+
+This is intentional for the sandbox. The goal is to prove the workflow shape first, then add each platform client one at a time.
+
+---
+
+## YATCO BOSS Direction
+
+This sandbox is moving toward the YATCO BOSS Social Media Auto-Poster concept:
+
+- Connect brokerage social accounts.
+- Generate AI captions from yacht listing data.
+- Let the user review and edit content before publishing.
+- Schedule posts across platforms.
+- Store durable scheduled post rows.
+- Use background jobs to publish due posts.
+- Log platform responses and failures.
+- Later collect engagement metrics.
+
+A production version would eventually need:
+
+- brokerage/user permissions
+- production OAuth flows
+- secure token storage, such as AWS Secrets Manager
+- image staging, such as S3
+- platform-specific API clients
+- token refresh logic
+- failure retry policies
+- engagement metrics collection
+- production logging and monitoring
+- secured Hangfire dashboard
+- full authentication and authorization
+
+---
+
+## Suggested Next Development Order
+
+Recommended next development order:
+
+1. Improve the Scheduled Post Details page so debugging/publishing information is easier to read.
+2. Harden platform routing so unsupported platforms do not accidentally go through the Facebook poster.
+3. Add cancel/edit behavior for pending scheduled posts.
+4. Harden Facebook OAuth reconnect and token expiration display.
+5. Add Facebook image/photo posting.
+6. Add Instagram next, because it is also Meta-based.
+7. Add LinkedIn after Instagram.
+8. Add YouTube Shorts and TikTok later because video posting is more complex.
+9. Add production-ready token storage and logging.
+
+---
+
+## Recent UI Improvements
+
+Recent quality-of-life UI updates include:
+
+- custom YATCO-inspired top navigation
+- visible Social Accounts navigation
+- persistent Connect Facebook Page call-to-action
+- redesigned dashboard
+- improved workflow explanation
+- polished Listings page
+- custom yacht input card
+- redesigned generated-caption scheduling page
+- clearer social account checkbox selection states
+- better date/time scheduling controls
+- redesigned Scheduled Posts page
+- redesigned Social Accounts page
+- updated CSS for yacht-focused cards, badges, buttons, forms, and responsive layout
+
+---
+
+## Status Summary
+
+```text
+Current stage:
+Yacht-focused, Facebook-first sandbox with AI captions, multi-account scheduling UI,
+scheduled post persistence, Hangfire due-post scanning, real Facebook text publishing,
+and a more polished YATCO-inspired interface.
+
+Not production-ready:
+This remains a learning and architecture proof of concept.
+```
