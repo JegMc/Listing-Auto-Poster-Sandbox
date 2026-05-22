@@ -85,7 +85,22 @@
                 @Html.AntiForgeryToken()
 
                 <input type="hidden" name="ListingId" value="@Model.Listing.Id" />
+                <div class="yatco-form-group">
+                    <label class="yatco-image-attach-card">
+                        <input type="checkbox"
+                            name="IncludeImage"
+                            value="true"
+                            class="yatco-image-attach-input" />
 
+                        <span class="yatco-image-attach-content">
+                            <span class="yatco-image-attach-title">Attach hero image to scheduled post</span>
+                            <span class="yatco-image-attach-copy">
+                                Leave unchecked for text-only publishing. Check this only when you want Facebook to receive the listing image.
+                            </span>
+                        </span>
+                    </label>
+                </div>
+                <input type="hidden" name="IncludeImage" value="false" />
                 <div class="yatco-panel-header">
                     <p class="yatco-eyebrow">Generated Caption</p>
                     <h2>Schedule Post</h2>

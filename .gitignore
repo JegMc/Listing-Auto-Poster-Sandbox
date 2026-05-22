@@ -73,3 +73,6 @@ node_modules/
 .history/
 .localhistory/
 .vshistory/
+
+# Local uploaded sandbox images
+ListingAutoPosterSandbox.Web/wwwroot/uploads/

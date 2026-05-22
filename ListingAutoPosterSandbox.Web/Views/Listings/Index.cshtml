@@ -46,7 +46,7 @@
             </div>
         </div>
 
-        <form asp-controller="Listings" asp-action="GenerateCustomCaption" method="post" class="yatco-custom-form">
+        <form asp-controller="Listings" asp-action="GenerateCustomCaption" method="post" enctype="multipart/form-data" class="yatco-custom-form">
             @Html.AntiForgeryToken()
 
             <div class="yatco-form-group yatco-form-group-wide">
@@ -121,6 +121,18 @@
                 <div class="yatco-form-group yatco-form-group-wide">
                     <label for="ImageUrl" class="yatco-form-label">Image URL</label>
                     <input id="ImageUrl" name="ImageUrl" class="form-control yatco-input" />
+                </div>
+                <div class="yatco-form-group yatco-form-group-wide">
+                    <label for="HeroImageFile" class="yatco-form-label">Upload Hero Image</label>
+                    <input id="HeroImageFile"
+                        name="HeroImageFile"
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                        class="form-control yatco-input" />
+                    <p class="yatco-helper-text">
+                        Optional. Use either a public image URL or upload a local JPG, PNG, or WebP hero image.
+                        Uploaded images are stored locally for sandbox testing.
+                    </p>
                 </div>
             </div>
 

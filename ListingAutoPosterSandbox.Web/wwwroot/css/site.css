@@ -1573,3 +1573,44 @@ body {
     background: rgba(102, 120, 138, 0.13);
     color: var(--yatco-muted);
 }
+
+.yatco-image-attach-card {
+    display: flex;
+    cursor: pointer;
+    padding: 1rem;
+    border: 1px solid var(--yatco-border);
+    border-radius: 18px;
+    background: var(--yatco-sky);
+    transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.yatco-image-attach-card:hover {
+    border-color: var(--yatco-ocean);
+    background: #ffffff;
+    box-shadow: 0 10px 24px rgba(11, 34, 63, 0.08);
+}
+
+.yatco-image-attach-input {
+    margin-top: 0.35rem;
+    margin-right: 0.75rem;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--yatco-ocean);
+}
+
+.yatco-image-attach-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.yatco-image-attach-title {
+    color: var(--yatco-navy);
+    font-weight: 800;
+}
+
+.yatco-image-attach-copy {
+    margin-top: 0.25rem;
+    color: var(--yatco-muted);
+    font-size: 0.88rem;
+    line-height: 1.5;
+}

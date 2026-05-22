@@ -16,6 +16,11 @@ public class ScheduledPost
 
     public string Caption { get; set; } = string.Empty;
 
+    // Optional image for this specific scheduled post.
+    // If this is null or empty, the post should publish as text-only.
+    // If this has a value, the publisher may use it for an image/photo post.
+    public string? ImageUrl { get; set; }
+
     public DateTime ScheduledUtc { get; set; }
 
     public PostStatus Status { get; set; } = PostStatus.Scheduled;

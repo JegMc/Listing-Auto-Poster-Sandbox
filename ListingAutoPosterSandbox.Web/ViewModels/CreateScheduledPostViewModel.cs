@@ -19,6 +19,10 @@ public class CreateScheduledPostViewModel
     [StringLength(2000)]
     public string Caption { get; set; } = string.Empty;
 
+    // User must explicitly choose whether this scheduled post should attach the listing hero image.
+    // This prevents every scheduled post from automatically using Listing.ImageUrl.
+    public bool IncludeImage { get; set; }
+
     [Required]
     public DateTime ScheduledLocal { get; set; }
 }

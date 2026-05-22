@@ -75,10 +75,12 @@ public class ScheduledPostsController : Controller
             return RedirectToAction("Index", "Listings");
         }
 
-        var listingExists = await _context.Listings
-            .AnyAsync(listing => listing.Id == viewModel.ListingId, cancellationToken);
+        var listing = await _context.Listings
+            .FirstOrDefaultAsync(
+                listing => listing.Id == viewModel.ListingId,
+                cancellationToken);
 
-        if (!listingExists)
+        if (listing is null)
         {
             return NotFound("Listing not found.");
         }
@@ -113,6 +115,12 @@ public class ScheduledPostsController : Controller
                 SocialAccountId = socialAccount.Id,
                 Platform = socialAccount.Platform,
                 Caption = viewModel.Caption.Trim(),
+
+                // Only attach the listing hero image if the user explicitly checked the image option.
+                ImageUrl = viewModel.IncludeImage && !string.IsNullOrWhiteSpace(listing.ImageUrl)
+                    ? listing.ImageUrl
+                    : null,
+
                 ScheduledUtc = scheduledUtc,
                 Status = PostStatus.Scheduled,
                 CreatedUtc = nowUtc,

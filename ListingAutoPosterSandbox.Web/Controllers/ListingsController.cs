@@ -2,6 +2,7 @@ using ListingAutoPosterSandbox.Web.Data;
 using ListingAutoPosterSandbox.Web.Models;
 using ListingAutoPosterSandbox.Web.Services;
 using ListingAutoPosterSandbox.Web.ViewModels;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,20 +13,21 @@ public class ListingsController : Controller
     private readonly AppDbContext _context;
     private readonly ICaptionGenerator _captionGenerator;
     private readonly IScheduledPostPublisher _scheduledPostPublisher;
+    private readonly IWebHostEnvironment _environment;
 
     public ListingsController(
         AppDbContext context,
         ICaptionGenerator captionGenerator,
-        IScheduledPostPublisher scheduledPostPublisher)
+        IScheduledPostPublisher scheduledPostPublisher,
+        IWebHostEnvironment environment)
     {
         _context = context;
         _captionGenerator = captionGenerator;
         _scheduledPostPublisher = scheduledPostPublisher;
+        _environment = environment;
     }
 
     // Shows the available sample listings.
-    // From this page, the user can start either the older generic scheduling flow
-    // or the newer Facebook-specific review/publish flow.
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
@@ -36,9 +38,8 @@ public class ListingsController : Controller
         return View(listings);
     }
 
-    // Older generic scheduling flow.
-    // This action generates a caption and sends the user to a page where they can schedule a post.
-    // The newer Facebook-specific flow starts at ReviewAiFacebookPost and sends the user to a review/edit page first.
+    // Generic scheduling flow.
+    // This action generates a caption and sends the user to a page where they can schedule one or more posts.
     [HttpGet]
     public async Task<IActionResult> GenerateCaption(
         int id,
@@ -79,6 +80,25 @@ public class ListingsController : Controller
             return RedirectToAction(nameof(Index));
         }
 
+        string? uploadedImageUrl;
+
+        try
+        {
+            uploadedImageUrl = await SaveUploadedHeroImageAsync(
+                input.HeroImageFile,
+                cancellationToken);
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["Error"] = ex.Message;
+            return RedirectToAction(nameof(Index));
+        }
+
+        var finalImageUrl = uploadedImageUrl
+            ?? (!string.IsNullOrWhiteSpace(input.ImageUrl)
+                ? input.ImageUrl.Trim()
+                : "https://placehold.co/600x400?text=Custom+Yacht");
+
         var location = input.Location?.Trim() ?? string.Empty;
 
         var listing = new Listing
@@ -101,9 +121,10 @@ public class ListingsController : Controller
             // The freeform user input becomes the main description sent to the AI caption generator.
             Description = input.CustomDetails.Trim(),
 
-            ImageUrl = string.IsNullOrWhiteSpace(input.ImageUrl)
-                ? "https://placehold.co/600x400?text=Custom+Yacht"
-                : input.ImageUrl.Trim()
+            // Can now be either:
+            // 1. a public image URL, or
+            // 2. a local app upload path like /uploads/listings/example.jpg
+            ImageUrl = finalImageUrl
         };
 
         _context.Listings.Add(listing);
@@ -124,9 +145,8 @@ public class ListingsController : Controller
 
         return View("GenerateCaption", viewModel);
     }
-    
-    
-    // Newer Facebook-specific flow.
+
+    // Older Facebook-specific review flow.
     // This action creates an AI-generated draft and sends the user to a review/edit page.
     // It does not publish immediately.
     [HttpPost]
@@ -307,5 +327,59 @@ public class ListingsController : Controller
         model.ListingDescription = listing.Description;
         model.ListingImageUrl = listing.ImageUrl;
         model.ListingPrice = listing.Price;
+    }
+
+    private async Task<string?> SaveUploadedHeroImageAsync(
+        IFormFile? imageFile,
+        CancellationToken cancellationToken)
+    {
+        if (imageFile is null || imageFile.Length == 0)
+        {
+            return null;
+        }
+
+        const long maxBytes = 5 * 1024 * 1024;
+
+        if (imageFile.Length > maxBytes)
+        {
+            throw new InvalidOperationException("Hero image must be 5 MB or smaller.");
+        }
+
+        var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+
+        var allowedExtensions = new HashSet<string>
+        {
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".webp"
+        };
+
+        if (!allowedExtensions.Contains(extension))
+        {
+            throw new InvalidOperationException("Hero image must be a JPG, PNG, or WebP file.");
+        }
+
+        var webRootPath = _environment.WebRootPath;
+
+        if (string.IsNullOrWhiteSpace(webRootPath))
+        {
+            webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+        }
+
+        var uploadsFolder = Path.Combine(
+            webRootPath,
+            "uploads",
+            "listings");
+
+        Directory.CreateDirectory(uploadsFolder);
+
+        var fileName = $"{Guid.NewGuid():N}{extension}";
+        var fullPath = Path.Combine(uploadsFolder, fileName);
+
+        await using var stream = System.IO.File.Create(fullPath);
+        await imageFile.CopyToAsync(stream, cancellationToken);
+
+        return $"/uploads/listings/{fileName}";
     }
 }
