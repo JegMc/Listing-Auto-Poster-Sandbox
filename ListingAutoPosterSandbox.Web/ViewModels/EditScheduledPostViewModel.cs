@@ -12,9 +12,15 @@ public class EditScheduledPostViewModel
 
     public string SocialAccountDisplayName { get; set; } = string.Empty;
 
+    public string Status { get; set; } = string.Empty;
+
     [Required]
     [StringLength(2000)]
     public string Caption { get; set; } = string.Empty;
+
+    [StringLength(1000)]
+    [Display(Name = "Image URL")]
+    public string? ImageUrl { get; set; }
 
     [Required]
     public DateTime ScheduledLocal { get; set; }

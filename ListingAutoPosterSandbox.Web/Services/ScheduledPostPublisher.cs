@@ -8,16 +8,16 @@ namespace ListingAutoPosterSandbox.Web.Services;
 public class ScheduledPostPublisher : IScheduledPostPublisher
 {
     private readonly AppDbContext _context;
-    private readonly IPlatformPoster _platformPoster;
+    private readonly IEnumerable<IPlatformPoster> _platformPosters;
     private readonly ITokenStore _tokenStore;
 
     public ScheduledPostPublisher(
         AppDbContext context,
-        IPlatformPoster platformPoster,
+        IEnumerable<IPlatformPoster> platformPosters,
         ITokenStore tokenStore)
     {
         _context = context;
-        _platformPoster = platformPoster;
+        _platformPosters = platformPosters;
         _tokenStore = tokenStore;
     }
 
@@ -69,18 +69,9 @@ public class ScheduledPostPublisher : IScheduledPostPublisher
                     $"Scheduled post {scheduledPost.Id} does not have a social account.");
             }
 
-            PostResult result;
-
-            if (scheduledPost.Platform == PostPlatform.Facebook)
-            {
-                result = await PublishRealFacebookPostAsync(
-                    scheduledPost,
-                    cancellationToken);
-            }
-            else
-            {
-                result = CreateDemoPlatformResult(scheduledPost);
-            }
+            var result = await PublishByPlatformAsync(
+                scheduledPost,
+                cancellationToken);
 
             attempt.CompletedUtc = DateTime.UtcNow;
             attempt.Success = result.Success;
@@ -120,24 +111,37 @@ public class ScheduledPostPublisher : IScheduledPostPublisher
         }
     }
 
-    private async Task<PostResult> PublishRealFacebookPostAsync(
-        ScheduledPost scheduledPost,
-        CancellationToken cancellationToken)
+    private async Task<PostResult> PublishByPlatformAsync(
+    ScheduledPost scheduledPost,
+    CancellationToken cancellationToken)
     {
         if (scheduledPost.SocialAccount is null)
         {
             return new PostResult
             {
                 Success = false,
-                ErrorMessage = "Facebook post has no connected social account."
+                ErrorMessage = $"Scheduled post {scheduledPost.Id} does not have a connected social account."
             };
         }
 
-        var accessToken = await _tokenStore.GetAccessTokenAsync(
-            scheduledPost.SocialAccount.SecretName,
-            cancellationToken);
+        var platformPoster = _platformPosters.FirstOrDefault(
+            poster => poster.Platform == scheduledPost.Platform);
 
-        return await _platformPoster.PublishAsync(
+        if (platformPoster is null)
+        {
+            return CreateDemoPlatformResult(scheduledPost);
+        }
+
+        var accessToken = string.Empty;
+
+        if (scheduledPost.Platform == PostPlatform.Facebook)
+        {
+            accessToken = await _tokenStore.GetAccessTokenAsync(
+                scheduledPost.SocialAccount.SecretName,
+                cancellationToken);
+        }
+
+        return await platformPoster.PublishAsync(
             scheduledPost,
             accessToken,
             cancellationToken);

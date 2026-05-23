@@ -81,7 +81,7 @@
                             </span>
                         </div>
 
-                        <h2>@post.Listing.Title</h2>
+                        <h2>@(post.Listing?.Title ?? "Unknown listing")</h2>
 
                         <div class="yatco-post-meta-grid">
                             <div>
@@ -128,6 +128,13 @@
                             @post.Caption
                         </p>
 
+                        @if (!string.IsNullOrWhiteSpace(post.ImageUrl))
+                        {
+                            <div class="yatco-post-image-url">
+                                <strong>Image URL:</strong> @post.ImageUrl
+                            </div>
+                        }
+
                         @if (!string.IsNullOrWhiteSpace(post.LastError))
                         {
                             <div class="yatco-alert yatco-alert-error">
@@ -137,28 +144,43 @@
                     </div>
 
                     <div class="yatco-post-actions">
+                        @if (post.Status == PostStatus.Scheduled || post.Status == PostStatus.Failed)
+                        {
+                            <form asp-controller="ScheduledPosts"
+                                  asp-action="PublishNow"
+                                  asp-route-id="@post.Id"
+                                  method="post"
+                                  class="yatco-inline-form">
+                                @Html.AntiForgeryToken()
+
+                                <button type="submit" class="btn yatco-primary-button">
+                                    Publish Now
+                                </button>
+                            </form>
+                        }
+                        
                         <a asp-controller="ScheduledPosts"
-                        asp-action="Details"
-                        asp-route-id="@post.Id"
-                        class="btn yatco-secondary-button">
+                           asp-action="Details"
+                           asp-route-id="@post.Id"
+                           class="btn yatco-secondary-button">
                             Details
                         </a>
 
-                        @if (post.Status == PostStatus.Scheduled)
+                        @if (post.Status == PostStatus.Scheduled || post.Status == PostStatus.Failed)
                         {
                             <a asp-controller="ScheduledPosts"
-                            asp-action="Edit"
-                            asp-route-id="@post.Id"
-                            class="btn yatco-secondary-button">
+                               asp-action="Edit"
+                               asp-route-id="@post.Id"
+                               class="btn yatco-secondary-button">
                                 Edit
                             </a>
 
                             <form asp-controller="ScheduledPosts"
-                                asp-action="Cancel"
-                                asp-route-id="@post.Id"
-                                method="post"
-                                class="yatco-inline-form"
-                                onsubmit="return confirm('Cancel this scheduled post?');">
+                                  asp-action="Cancel"
+                                  asp-route-id="@post.Id"
+                                  method="post"
+                                  class="yatco-inline-form"
+                                  onsubmit="return confirm('Cancel this post?');">
                                 @Html.AntiForgeryToken()
 
                                 <button type="submit" class="btn yatco-danger-button">
@@ -167,17 +189,18 @@
                             </form>
                         }
 
-                        @if (post.Status == PostStatus.Scheduled || post.Status == PostStatus.Failed)
+                        @if (post.Status == PostStatus.Failed || post.Status == PostStatus.Cancelled)
                         {
                             <form asp-controller="ScheduledPosts"
-                                asp-action="PublishNow"
-                                asp-route-id="@post.Id"
-                                method="post"
-                                class="yatco-inline-form">
+                                  asp-action="Remove"
+                                  asp-route-id="@post.Id"
+                                  method="post"
+                                  class="yatco-inline-form"
+                                  onsubmit="return confirm('Remove this post from the sandbox queue? This will also remove its publish attempts.');">
                                 @Html.AntiForgeryToken()
 
-                                <button type="submit" class="btn yatco-primary-button">
-                                    Publish Now
+                                <button type="submit" class="btn yatco-danger-button">
+                                    Remove
                                 </button>
                             </form>
                         }

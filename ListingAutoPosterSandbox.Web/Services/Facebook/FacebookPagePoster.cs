@@ -3,11 +3,12 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using ListingAutoPosterSandbox.Web.Models;
 using Microsoft.Extensions.Options;
-
-namespace ListingAutoPosterSandbox.Web.Services;
+namespace ListingAutoPosterSandbox.Web.Services.Facebook;
 
 public sealed class FacebookPagePoster : IPlatformPoster
 {
+    public PostPlatform Platform => PostPlatform.Facebook;
+
     private readonly HttpClient _httpClient;
     private readonly FacebookOptions _options;
     private readonly IWebHostEnvironment _environment;

@@ -2,6 +2,7 @@ using Hangfire;
 using ListingAutoPosterSandbox.Web.Data;
 using ListingAutoPosterSandbox.Web.Services;
 using Microsoft.EntityFrameworkCore;
+using ListingAutoPosterSandbox.Web.Services.Facebook;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,11 +38,23 @@ builder.Services.AddHangfire(configuration =>
 
 builder.Services.AddHangfireServer();
 
-// Facebook configuration.
+// Facebook/Instagram configuration.
 // Sensitive values should come from user-secrets or environment variables,
 // not committed appsettings files.
 builder.Services.Configure<FacebookOptions>(
     builder.Configuration.GetSection("Facebook"));
+
+// Instagram posting is not implemented yet, but the scaffold poster and diagnostics are registered
+builder.Services.Configure<InstagramDiagnosticOptions>(
+    builder.Configuration.GetSection("InstagramDiagnostic"));
+
+builder.Services.AddHttpClient<IInstagramConnectionDiagnosticService, InstagramConnectionDiagnosticService>();
+
+// Typed HTTP client for Instagram poster. This is registered even though the poster is not active yet,
+builder.Services.AddHttpClient<InstagramPlatformPoster>();
+
+builder.Services.AddScoped<IPlatformPoster>(
+    serviceProvider => serviceProvider.GetRequiredService<InstagramPlatformPoster>());
 
 // Typed HTTP clients for Meta Graph API services.
 builder.Services.AddHttpClient<FacebookPagePoster>();
