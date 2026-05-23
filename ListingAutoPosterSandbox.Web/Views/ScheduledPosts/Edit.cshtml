@@ -51,6 +51,10 @@
                     <span>Social Account</span>
                     <strong>@Model.SocialAccountDisplayName</strong>
                 </div>
+                <div class="mb-3">
+                    <label class="form-label">Current Status</label>
+                    <input class="form-control" value="@Model.Status" readonly />
+                </div>
             </div>
 
             <div class="yatco-form-group">
@@ -61,7 +65,14 @@
                           maxlength="2000"></textarea>
                 <span asp-validation-for="Caption" class="text-danger"></span>
             </div>
-
+            <div class="mb-3">
+                <label asp-for="ImageUrl" class="form-label"></label>
+                <input asp-for="ImageUrl" class="form-control" />
+                <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                    <div class="form-text">
+                        For Instagram scaffold readiness, use a public HTTPS image URL. Local upload paths and localhost URLs will fail Instagram validation.
+                    </div>
+            </div>
             <div class="yatco-form-group">
                 <label class="yatco-form-label">Schedule Time</label>
 

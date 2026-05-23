@@ -27,7 +27,9 @@ public sealed class FacebookOAuthService
             ",",
             "pages_show_list",
             "pages_read_engagement",
-            "pages_manage_posts");
+            "pages_manage_posts",
+            "instagram_basic",
+            "instagram_content_publish");
 
         var baseUrl =
             $"https://www.facebook.com/{_options.GraphApiVersion}/dialog/oauth";

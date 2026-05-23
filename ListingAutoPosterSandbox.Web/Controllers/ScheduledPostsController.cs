@@ -165,24 +165,26 @@ public class ScheduledPostsController : Controller
             return NotFound();
         }
 
-        if (scheduledPost.Status != PostStatus.Scheduled)
+        if (!CanEditPost(scheduledPost.Status))
         {
-            TempData["Error"] = "Only scheduled posts can be edited.";
+            TempData["Error"] = "Only scheduled or failed posts can be edited.";
             return RedirectToAction(nameof(Details), new { id });
         }
 
         var viewModel = new EditScheduledPostViewModel
-            {
-                Id = scheduledPost.Id,
-                ListingTitle = scheduledPost.Listing?.Title ?? "Unknown listing",
-                Platform = scheduledPost.Platform.ToString(),
-                SocialAccountDisplayName = scheduledPost.SocialAccount?.DisplayName ?? "None",
-                Caption = scheduledPost.Caption,
-                ScheduledLocal = DateTime.SpecifyKind(
-                        scheduledPost.ScheduledUtc,
-                        DateTimeKind.Utc)
-                    .ToLocalTime()
-            };
+        {
+            Id = scheduledPost.Id,
+            ListingTitle = scheduledPost.Listing?.Title ?? "Unknown listing",
+            Platform = scheduledPost.Platform.ToString(),
+            SocialAccountDisplayName = scheduledPost.SocialAccount?.DisplayName ?? "None",
+            Status = scheduledPost.Status.ToString(),
+            Caption = scheduledPost.Caption,
+            ImageUrl = scheduledPost.ImageUrl,
+            ScheduledLocal = DateTime.SpecifyKind(
+                scheduledPost.ScheduledUtc,
+                DateTimeKind.Utc)
+                .ToLocalTime()
+        };
 
         return View(viewModel);
     }
@@ -203,9 +205,9 @@ public class ScheduledPostsController : Controller
             return NotFound();
         }
 
-        if (scheduledPost.Status != PostStatus.Scheduled)
+        if (!CanEditPost(scheduledPost.Status))
         {
-            TempData["Error"] = "Only scheduled posts can be edited.";
+            TempData["Error"] = "Only scheduled or failed posts can be edited.";
             return RedirectToAction(nameof(Details), new { id = scheduledPost.Id });
         }
 
@@ -214,6 +216,7 @@ public class ScheduledPostsController : Controller
             viewModel.ListingTitle = scheduledPost.Listing?.Title ?? "Unknown listing";
             viewModel.Platform = scheduledPost.Platform.ToString();
             viewModel.SocialAccountDisplayName = scheduledPost.SocialAccount?.DisplayName ?? "None";
+            viewModel.Status = scheduledPost.Status.ToString();
 
             return View(viewModel);
         }
@@ -232,12 +235,25 @@ public class ScheduledPostsController : Controller
             viewModel.ListingTitle = scheduledPost.Listing?.Title ?? "Unknown listing";
             viewModel.Platform = scheduledPost.Platform.ToString();
             viewModel.SocialAccountDisplayName = scheduledPost.SocialAccount?.DisplayName ?? "None";
+            viewModel.Status = scheduledPost.Status.ToString();
 
             return View(viewModel);
         }
 
         scheduledPost.Caption = viewModel.Caption.Trim();
+        scheduledPost.ImageUrl = string.IsNullOrWhiteSpace(viewModel.ImageUrl)
+            ? null
+            : viewModel.ImageUrl.Trim();
         scheduledPost.ScheduledUtc = scheduledUtc;
+
+        // If this post failed before, editing it means we are preparing it for another attempt.
+        if (scheduledPost.Status == PostStatus.Failed)
+        {
+            scheduledPost.Status = PostStatus.Scheduled;
+            scheduledPost.LastError = null;
+            scheduledPost.ExternalPostId = null;
+        }
+
         scheduledPost.UpdatedUtc = DateTime.UtcNow;
 
         await _context.SaveChangesAsync(cancellationToken);
@@ -260,9 +276,9 @@ public class ScheduledPostsController : Controller
             return NotFound();
         }
 
-        if (scheduledPost.Status != PostStatus.Scheduled)
+        if (!CanCancelPost(scheduledPost.Status))
         {
-            TempData["Error"] = "Only scheduled posts can be cancelled.";
+            TempData["Error"] = "Only scheduled or failed posts can be cancelled.";
             return RedirectToAction(nameof(Details), new { id });
         }
 
@@ -271,7 +287,58 @@ public class ScheduledPostsController : Controller
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        TempData["Success"] = "Scheduled post updated.";
+        TempData["Success"] = "Post cancelled.";
         return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Remove(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        var scheduledPost = await _context.ScheduledPosts
+            .FirstOrDefaultAsync(post => post.Id == id, cancellationToken);
+
+        if (scheduledPost is null)
+        {
+            return NotFound();
+        }
+
+        if (!CanRemovePost(scheduledPost.Status))
+        {
+            TempData["Error"] = "Only failed or cancelled posts can be removed from the sandbox queue.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var attempts = await _context.PostAttempts
+            .Where(attempt => attempt.ScheduledPostId == id)
+            .ToListAsync(cancellationToken);
+
+        _context.PostAttempts.RemoveRange(attempts);
+        _context.ScheduledPosts.Remove(scheduledPost);
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        TempData["Success"] = "Post removed from the sandbox queue.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    private static bool CanEditPost(PostStatus status)
+    {
+        return status == PostStatus.Scheduled ||
+            status == PostStatus.Failed;
+    }
+
+    private static bool CanCancelPost(PostStatus status)
+    {
+        return status == PostStatus.Scheduled ||
+            status == PostStatus.Failed;
+    }
+
+    private static bool CanRemovePost(PostStatus status)
+    {
+        return status == PostStatus.Failed ||
+            status == PostStatus.Cancelled;
     }
 }

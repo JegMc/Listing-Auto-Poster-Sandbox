@@ -4,6 +4,8 @@ namespace ListingAutoPosterSandbox.Web.Services;
 
 public interface IPlatformPoster
 {
+    PostPlatform Platform { get; }
+
     Task<PostResult> PublishAsync(
         ScheduledPost scheduledPost,
         string accessToken,

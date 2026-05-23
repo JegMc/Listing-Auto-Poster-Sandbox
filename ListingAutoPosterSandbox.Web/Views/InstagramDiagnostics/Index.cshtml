@@ -1,0 +1,151 @@
+@model ListingAutoPosterSandbox.Web.Services.InstagramConnectionDiagnosticResult
+
+@{
+    ViewData["Title"] = "Instagram Setup Diagnostic";
+}
+
+<div class="container py-4">
+    <div class="mb-4">
+        <h1 class="mb-2">Instagram Setup Diagnostic</h1>
+        <p class="text-muted">
+            This page verifies whether the configured Facebook Page exposes a connected Instagram business account.
+            It does not publish to Instagram.
+        </p>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h2 class="h5 mb-3">Status</h2>
+
+            @if (Model.PageFound && Model.InstagramAccountFound)
+            {
+                <div class="alert alert-success">
+                    @Model.StatusMessage
+                </div>
+            }
+            else if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger">
+                    @Model.StatusMessage
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    @Model.StatusMessage
+                </div>
+            }
+
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Diagnostic configured</dt>
+                <dd class="col-sm-8">@(Model.IsConfigured ? "Yes" : "No")</dd>
+
+                <dt class="col-sm-4">Facebook Page found</dt>
+                <dd class="col-sm-8">@(Model.PageFound ? "Yes" : "No")</dd>
+
+                <dt class="col-sm-4">Facebook Page ID</dt>
+                <dd class="col-sm-8">@(Model.PageId ?? "Not returned")</dd>
+
+                <dt class="col-sm-4">Facebook Page name</dt>
+                <dd class="col-sm-8">@(Model.PageName ?? "Not returned")</dd>
+
+                <dt class="col-sm-4">Instagram account found</dt>
+                <dd class="col-sm-8">@(Model.InstagramAccountFound ? "Yes" : "No")</dd>
+
+                <dt class="col-sm-4">Instagram Graph account ID</dt>
+                <dd class="col-sm-8">@(Model.InstagramAccountId ?? "Not returned")</dd>
+
+                <dt class="col-sm-4">Instagram username</dt>
+                <dd class="col-sm-8">
+                    @if (!string.IsNullOrWhiteSpace(Model.InstagramUsername))
+                    {
+                        <span>@($"@{Model.InstagramUsername}")</span>
+                    }
+                    else
+                    {
+                        <span>Not returned</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-4">Expected username</dt>
+                <dd class="col-sm-8">
+                    @if (!string.IsNullOrWhiteSpace(Model.ExpectedInstagramUsername))
+                    {
+                        <span>@($"@{Model.ExpectedInstagramUsername.TrimStart('@')}")</span>
+                    }
+                    else
+                    {
+                        <span>Not configured</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-4">Expected username matches</dt>
+                <dd class="col-sm-8">
+                    @(Model.ExpectedInstagramUsernameMatches.HasValue
+                        ? (Model.ExpectedInstagramUsernameMatches.Value ? "Yes" : "No")
+                        : "Not checked")
+                </dd>
+            </dl>
+        </div>
+    </div>
+
+    @if (Model.PageFound && Model.InstagramAccountFound)
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Save discovered Instagram account</h2>
+
+                <p class="text-muted">
+                    This saves the discovered Instagram business account into the sandbox SocialAccount table.
+                    It does not enable real Instagram publishing yet.
+                </p>
+
+                @if (!string.IsNullOrWhiteSpace(Model.InstagramSocialAccountSaveMessage))
+                {
+                    <div class="alert @(Model.InstagramSocialAccountSaved ? "alert-success" : "alert-warning")">
+                        @Model.InstagramSocialAccountSaveMessage
+                    </div>
+                }
+
+                <form asp-controller="InstagramDiagnostics"
+                    asp-action="SaveDiscoveredAccount"
+                    method="post">
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit" class="btn btn-primary">
+                        Save / Update Instagram SocialAccount
+                    </button>
+                </form>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Error details</h2>
+                <pre class="bg-light p-3 rounded small">@Model.ErrorMessage</pre>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.RawResponseJson))
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Graph API response</h2>
+                <pre class="bg-light p-3 rounded small">@Model.RawResponseJson</pre>
+            </div>
+        </div>
+    }
+
+    <div class="d-flex gap-2">
+        <a asp-controller="SocialAccounts" asp-action="Index" class="btn btn-outline-secondary">
+            Back to Social Accounts
+        </a>
+        <a asp-controller="ScheduledPosts" asp-action="Index" class="btn btn-outline-secondary">
+            View Scheduled Posts
+        </a>
+    </div>
+</div>
